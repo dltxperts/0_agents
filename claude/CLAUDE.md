@@ -1,49 +1,22 @@
 # Global Claude Code instructions
 
-This file is the entry point for every Claude Code session — both interactive
-sessions on Mac and Cyrus background agent runs on the dev server.
+This file is the entry point for every Claude Code session.
+
+## Session context
+
+The initiator of each session (Cyrus, a CLI invocation, the VS Code plugin,
+my SSH terminal) is responsible for telling you the session's purpose and
+constraints in the first message. If the first message includes instructions
+about which skills to use or skip, follow them. Without explicit instructions,
+treat the session as a normal interactive collaboration where all skills are
+available.
 
 ## At the start of any task
 
-1. Detect environment (see "Modes" below).
-2. If a project-local CLAUDE.md exists in `$cwd` or any ancestor directory,
+1. If a project-local CLAUDE.md exists in `$cwd` or any ancestor directory,
    read it. Project rules override global ones for project-specific conflicts.
-3. Determine the language(s) the task touches. Read the matching
+2. Determine the language(s) the task touches. Read the matching
    `~/.claude/lang/<lang>.md` for each.
-4. If the task description contains an "Auto-generated from /spec skill" header
-   or an already-structured plan (Decisions, Invariants, Implementation stages),
-   DO NOT re-plan. Proceed directly to implementation.
-
-## Modes
-
-You are running in one of two modes. Detect by inspecting your current working
-directory.
-
-### Cyrus background mode
-
-**Trigger**: cwd path contains `/.cyrus/worktrees/` (e.g.
-`/home/vibe/.cyrus/worktrees/<issue-id>/`, or any user's home).
-
-You are an autonomous background agent processing a Linear-assigned issue.
-
-- DO NOT invoke `/spec`, `/start-work`, `/plan`, `/review-plan`,
-  `/review-implementation`, `/quick-fix`, `/dictate`, or any other planning or
-  user-interactive skill. The plan is already in the Linear issue. Execute it.
-- These skills exist on the filesystem because the human sometimes works
-  interactively on this same server via SSH; they are not for you in
-  background mode.
-- The worktree is created by Cyrus. Don't create another.
-- Don't merge to `main` or `staging`. Open the PR and stop.
-- You may invoke deterministic utility skills (run tests, format, lint) as
-  part of implementation if they exist.
-
-### Interactive mode
-
-**Trigger**: anything else — your cwd is a normal project path, on Mac or on
-the server via SSH / VS Code Remote-SSH.
-
-The human is working interactively. All skills are available, including the
-planning ones.
 
 ## Language routing
 
@@ -64,6 +37,9 @@ For multi-language tasks, read all relevant files.
   code. If it passes immediately, it doesn't capture the invariant; rewrite it.
 - Implement the minimum code to make the test GREEN.
 - Run the full suite to verify no regressions before moving to the next stage.
+- Skill-level escape hatches that bypass RED test (e.g. `/bug` for typos)
+  are explicit and require the skill itself to announce them. Never skip
+  RED test on your own initiative.
 
 ### Commit discipline
 

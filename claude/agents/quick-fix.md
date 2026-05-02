@@ -22,7 +22,7 @@ Typical cases: typo, copy edit, wrong constant, bumping a patch-version dep, fix
 
 ## Protocol
 
-1. **Worktree**: if currently on `main` or `staging`, create a worktree first (same rule as start-work). Otherwise stay put.
+1. **Worktree**: always work in a worktree. If currently on `main` or `staging`, create one (same rule as start-work). If already in a worktree, stay there.
 2. **Edit** the file directly.
 3. **Run only the directly affected test file**, not the workspace. If there is no existing test for the changed code and the change is cosmetic, no test run is required.
 4. **Commit** with `fix:` or `chore:` prefix.

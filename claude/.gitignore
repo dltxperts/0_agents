@@ -1,0 +1,25 @@
+# Claude Code runtime state must never end up in this repo
+*.local
+.credentials*
+*.session
+plans/
+temp/
+todos/
+projects/
+statsig/
+shell-snapshots/
+file-history/
+sessions/
+ide/
+debug/
+backups/
+paste-cache/
+image-cache/
+session-env/
+telemetry/
+tasks/
+plugins/
+history.jsonl
+mcp-needs-auth-cache.json
+stats-cache.json
+settings.local.json

@@ -314,6 +314,19 @@ systemctl --user --quiet is-active "$CYRUS_SERVICE" \
   || err "Cyrus failed: journalctl --user -u $CYRUS_SERVICE -n 50"
 ok "Cyrus active"
 
+# ─── 16. Clean up cloudflared origin cert ───────────────────────────────────
+# cert.pem authorizes creating new tunnels and modifying DNS for the zone —
+# powerful credential. The running tunnel uses per-tunnel JSON, not cert.pem,
+# so removing it after setup doesn't disrupt anything. Re-run
+# `cloudflared tunnel login` if you need to add another tunnel later.
+say "Removing cloudflared origin cert"
+cloudflared tunnel logout 2>/dev/null || true
+if [[ -f "$HOME/.cloudflared/cert.pem" ]]; then
+  warn "cert.pem still present after logout — remove manually if you want"
+else
+  ok "cert.pem removed (running tunnel keeps using per-tunnel credentials)"
+fi
+
 # ─── Summary ────────────────────────────────────────────────────────────────
 say "Done."
 cat <<EOF
@@ -327,4 +340,8 @@ cat <<EOF
   Toolchain     : node $(node --version), bun $(bun --version), cyrus $(cyrus --version 2>/dev/null || echo unknown)
 
   Test: assign a Linear issue to your bot user and watch the logs.
+
+  Note: cloudflared origin cert (cert.pem) was removed for safety. The
+  running tunnel keeps working via its per-tunnel credentials. To add
+  another tunnel or modify DNS, re-run 'cloudflared tunnel login'.
 EOF

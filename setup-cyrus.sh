@@ -149,8 +149,8 @@ LOCAL_BIN="$HOME/.local/bin"
 
 # ─── 6. Symlink ~/.claude/ from this repo ───────────────────────────────────
 if [ -x "$REPO_DIR/install.sh" ]; then
-  say "Linking ~/.claude/ from $REPO_DIR/claude"
-  bash "$REPO_DIR/install.sh"
+  say "Linking ~/.claude/ from $REPO_DIR/claude (server mode — includes settings.json)"
+  bash "$REPO_DIR/install.sh" --server
 else
   warn "install.sh not found alongside this script — skipping ~/.claude/ link"
 fi

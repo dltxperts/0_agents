@@ -2,8 +2,21 @@
 # Symlink the Claude Code configuration from this repo into ~/.claude/.
 # Idempotent: re-running detects existing correct symlinks and does nothing.
 # Safe: backs up real files / directories before replacing.
+#
+# Usage:
+#   install.sh            # Mac / generic: links CLAUDE.md, agents/, lang/
+#   install.sh --server   # Server: ALSO links settings.json (wide-permission profile)
 
 set -euo pipefail
+
+SERVER_MODE=0
+for arg in "$@"; do
+  case "$arg" in
+    --server)   SERVER_MODE=1 ;;
+    -h|--help)  echo "usage: install.sh [--server]"; exit 0 ;;
+    *)          echo "unknown flag: $arg" >&2; exit 1 ;;
+  esac
+done
 
 REPO_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 SRC="$REPO_DIR/claude"
@@ -42,8 +55,14 @@ link_item() {
   echo "✓ linked: ~/.claude/$name → $src"
 }
 
-# Top-level items to symlink. Add new ones here when the repo gains content.
-for item in CLAUDE.md agents lang; do
+# Top-level items to symlink. Universal items first; server-only added when --server.
+ITEMS=(CLAUDE.md agents lang)
+if [[ "$SERVER_MODE" -eq 1 ]]; then
+  ITEMS+=(settings.json)
+  echo "  (server mode: also linking settings.json)"
+fi
+
+for item in "${ITEMS[@]}"; do
   link_item "$item"
 done
 

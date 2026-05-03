@@ -56,7 +56,10 @@ link_item() {
 }
 
 # Top-level items to symlink. Universal items first; server-only added when --server.
-ITEMS=(CLAUDE.md agents lang)
+#  agents/ — Task-tool subagents (cops, etc.)
+#  skills/ — user-invoked slash commands (/spec, /plan, /review-*, etc.)
+#           Format: skills/<name>/SKILL.md
+ITEMS=(CLAUDE.md agents skills lang)
 if [[ "$SERVER_MODE" -eq 1 ]]; then
   ITEMS+=(settings.json)
   echo "  (server mode: also linking settings.json)"

@@ -119,12 +119,13 @@ ok "cloudflared $(cloudflared --version 2>&1 | head -1)"
 
 # ─── 4. cloudflared login (interactive) ─────────────────────────────────────
 if [[ ! -f "$HOME/.cloudflared/cert.pem" ]]; then
-  warn "cloudflared not logged in yet."
-  echo "  Run this in another terminal of this same machine:"
-  echo "      cloudflared tunnel login"
-  echo "  It prints a URL — open it on your laptop, log in, authorize the zone."
-  pause
-  [[ -f "$HOME/.cloudflared/cert.pem" ]] || err "Still not logged in. Aborting."
+  warn "cloudflared not logged in. Starting browser auth flow now."
+  echo "  cloudflared will print a URL — open it on any device with a browser,"
+  echo "  log in, and authorize the '$DOMAIN' zone. This terminal will unblock"
+  echo "  automatically once the cert is delivered."
+  cloudflared tunnel login
+  [[ -f "$HOME/.cloudflared/cert.pem" ]] \
+    || err "Login finished but no cert.pem appeared. Try manually: cloudflared tunnel login"
 fi
 ok "cloudflared logged in"
 

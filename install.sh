@@ -66,5 +66,19 @@ for item in "${ITEMS[@]}"; do
   link_item "$item"
 done
 
+# MCP: register codex (user scope) so any Claude Code session can call it
+if command -v claude >/dev/null && command -v codex >/dev/null; then
+  if claude mcp list 2>/dev/null | grep -q '^codex:'; then
+    echo "✓ codex MCP already registered"
+  else
+    echo "  Registering codex as user-scope MCP server..."
+    if claude mcp add -s user codex -- codex mcp-server >/dev/null 2>&1; then
+      echo "✓ codex MCP registered (scope: user)"
+    else
+      echo "⚠ codex MCP registration failed (continuing)"
+    fi
+  fi
+fi
+
 echo ""
 echo "Done. Verify with:  ls -la \"$DST\""

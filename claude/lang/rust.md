@@ -34,6 +34,17 @@ be reproducible:
 
 For non-deterministic code (UI state, user-driven flows), `HashMap` is fine.
 
+## Async
+
+- Runtime: tokio. Single global runtime, default work-stealing scheduler.
+- Don't call `block_on` inside async contexts — it deadlocks the runtime.
+  For sync APIs that must be invoked from async code, use
+  `tokio::task::spawn_blocking`. For CPU-bound work, also `spawn_blocking`.
+- Prefer `async fn` in trait definitions when the language version permits.
+- Bounded channels (`tokio::sync::mpsc::channel(N)`) over unbounded — they
+  apply backpressure naturally and surface saturation as errors instead of
+  unbounded memory growth.
+
 ## Code style
 
 - Public types in library crates should have doc comments describing

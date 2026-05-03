@@ -29,6 +29,9 @@ For multi-language tasks, read all relevant files.
 
 ## Always-on principles
 
+For git operations (branching, commits, merges, history) — see
+~/.claude/agents/git.md. The summary: never rewrite history.
+
 ### TDD
 
 - Define **invariants** (a numbered list of testable statements) before writing
@@ -40,22 +43,6 @@ For multi-language tasks, read all relevant files.
 - Skill-level escape hatches that bypass RED test (e.g. `/bug` for typos)
   are explicit and require the skill itself to announce them. Never skip
   RED test on your own initiative.
-
-### Commit discipline
-
-- **Conventional Commits**: `feat(scope):`, `fix(scope):`, `refactor(scope):`,
-  `test:`, `docs:`, `chore:`.
-- Commit only at explicit gates: the user asks for a commit, OR a complete
-  stage of an approved plan is finished.
-- All changes via PR. **Never push directly to `main` or `staging`.**
-- All code changes happen in worktrees. **One agent = one worktree = one
-  branch.** Never implement in the main working tree.
-- Merge worktrees ONLY via `git merge`. **NEVER `cp`**, **NEVER
-  `git checkout <branch> -- <files>`** to move code between trees.
-- All checks must pass before merge — zero broken checks. No "pre-existing"
-  exceptions.
-- **NEVER use `--no-verify`** to skip pre-commit hooks. Fix the hook failure
-  instead.
 
 ### Code changes
 
@@ -81,8 +68,8 @@ project wins for that project. Otherwise this file is the source of truth.
 ## Boundaries (always)
 
 - Never modify `.github/workflows/`, `infrastructure/`, `.claude/`,
-  `~/.claude/`, `~/.cyrus/`, or any path containing secrets, unless the task
-  explicitly names the file.
+  `~/.claude/`, `~/.cyrus/`, `~/Coding/0_agents/claude/`, or any path
+  containing secrets, unless the task explicitly names the file.
 - Never edit `CLAUDE.md` or `AGENTS.md` as part of a feature task. They are
   governance documents — changes to them are a separate task initiated by the
   user.

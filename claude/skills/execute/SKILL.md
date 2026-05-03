@@ -37,6 +37,14 @@ Execute the plan stage by stage per CLAUDE.md "Always-on principles"
 Use /verify-app, /verify-frontend, /bug, /git, /completion-note as
 helpers between stages.
 
+Stage transitions are AUTOMATIC. Do NOT pause between stages to ask
+"continue or review?" / "запустить дальше или подождать?" — move from
+stage N to stage N+1 immediately after the previous stage's commit.
+Stop ONLY on: (1) stage failure (tests fail, hook blocks, build breaks),
+(2) plan ambiguity that the plan text doesn't resolve, (3) explicit user
+interrupt. Each commit is a natural pause point — the user can interrupt
+there if they want to step in.
+
 Default exit: open a PR (do not merge to main/staging), end with
 /completion-note.
 

@@ -133,6 +133,7 @@ Stage 3: <description>
 - NEVER skip the RED test phase. The test must fail before you implement.
 - NEVER add fallbacks, defaults, or "just in case" code not in the approved plan.
 - NEVER stop partway through. Deliver 100% of the plan or explain what blocked you.
+- NEVER pause between stages to ask "continue or review?". Stage transitions are AUTOMATIC — start the next stage immediately after the current stage's commit. Stop only on (1) stage failure, (2) plan ambiguity, (3) explicit user interrupt. Each commit is a natural pause point — the user interrupts there if they want.
 
 ## If Something Goes Wrong
 

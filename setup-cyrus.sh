@@ -155,6 +155,27 @@ else
   warn "install.sh not found alongside this script — skipping ~/.claude/ link"
 fi
 
+# ─── 6b. Subscription logins for both runners ───────────────────────────────
+# Both runners authenticate via Anthropic / OpenAI subscriptions, not API
+# keys. Each CLI prints a URL — open it on any device with a browser.
+
+say "Claude Code subscription login"
+if [[ -f "$HOME/.claude/.credentials.json" ]]; then
+  ok "claude-code already authenticated ($HOME/.claude/.credentials.json present)"
+else
+  echo "  Running 'claude setup-token' — open the printed URL, sign in, paste back."
+  claude setup-token \
+    || warn "setup-token failed; finish manually: run 'claude' then '/login'"
+fi
+
+say "Codex subscription login"
+if [[ -f "$HOME/.codex/auth.json" ]]; then
+  ok "codex already authenticated ($HOME/.codex/auth.json present)"
+else
+  codex login \
+    || warn "codex login exited non-zero — retry with 'codex login'"
+fi
+
 # ─── 7. Cyrus home ──────────────────────────────────────────────────────────
 say "Cyrus home: $CYRUS_HOME"
 mkdir -p "$CYRUS_HOME"
@@ -203,8 +224,6 @@ EOF
   read -rp  "  LINEAR_CLIENT_ID:                            " LINEAR_CLIENT_ID
   read -rp  "  LINEAR_CLIENT_SECRET:                        " LINEAR_CLIENT_SECRET
   read -rp  "  LINEAR_WEBHOOK_SECRET:                       " LINEAR_WEBHOOK_SECRET
-  read -rsp "  ANTHROPIC_API_KEY (blank if Codex-only):     " ANTHROPIC_API_KEY; echo
-  read -rsp "  OPENAI_API_KEY    (blank if Claude-only):    " OPENAI_API_KEY; echo
 
   umask 077
   {
@@ -214,8 +233,6 @@ EOF
     echo "LINEAR_CLIENT_ID=$LINEAR_CLIENT_ID"
     echo "LINEAR_CLIENT_SECRET=$LINEAR_CLIENT_SECRET"
     echo "LINEAR_WEBHOOK_SECRET=$LINEAR_WEBHOOK_SECRET"
-    [[ -n "$ANTHROPIC_API_KEY" ]] && echo "ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY"
-    [[ -n "$OPENAI_API_KEY"    ]] && echo "OPENAI_API_KEY=$OPENAI_API_KEY"
   } > "$ENV_FILE"
   umask 022
   ok "Wrote $ENV_FILE (chmod 600)"

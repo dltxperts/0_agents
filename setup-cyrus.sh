@@ -53,11 +53,14 @@ CONFIG_FILE="$CYRUS_HOME/config.json"
 # first free port starting at 3456. Multiple Cyrus instances on the same
 # host (one per agent user) must not collide on the default port.
 is_port_in_use() {
+  # Try a real connect first — works regardless of which user owns the
+  # listener. Unprivileged 'ss -ltn' only shows the current user's sockets,
+  # so without sudo it would falsely report a foreign listener as free.
+  (exec 3<>/dev/tcp/127.0.0.1/"$1") 2>/dev/null && return 0
   if command -v ss >/dev/null 2>&1; then
-    ss -ltn "sport = :$1" 2>/dev/null | tail -n +2 | grep -q .
-  else
-    (exec 3<>/dev/tcp/127.0.0.1/"$1") 2>/dev/null
+    ss -ltn "sport = :$1" 2>/dev/null | tail -n +2 | grep -q . && return 0
   fi
+  return 1
 }
 find_free_port() {
   local p=$1

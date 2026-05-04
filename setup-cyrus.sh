@@ -212,9 +212,22 @@ if cloudflared tunnel list 2>/dev/null | awk '{print $2}' | grep -qx "$TUNNEL_NA
 else
   cloudflared tunnel create "$TUNNEL_NAME"
   TUNNEL_UUID=$(cloudflared tunnel list 2>/dev/null | awk -v n="$TUNNEL_NAME" '$2==n {print $1}')
-  cloudflared tunnel route dns "$TUNNEL_NAME" "$SUBDOMAIN"
   ok "Tunnel created, UUID: $TUNNEL_UUID"
 fi
+
+# Always (re-)assert the DNS route. cloudflared exits non-zero if a CNAME
+# already points at a *different* target — that's a real conflict the user
+# must resolve. Successful re-route or matching existing CNAME is fine.
+if cloudflared tunnel route dns "$TUNNEL_NAME" "$SUBDOMAIN" 2>&1 | tee /tmp/cfd-route.$$; then
+  ok "DNS route asserted: $SUBDOMAIN → ${TUNNEL_UUID}.cfargotunnel.com"
+else
+  if grep -qiE 'already exists|points to' /tmp/cfd-route.$$; then
+    ok "DNS route already in place for $SUBDOMAIN"
+  else
+    warn "DNS route assertion failed — create CNAME manually: $SUBDOMAIN → ${TUNNEL_UUID}.cfargotunnel.com (proxied)"
+  fi
+fi
+rm -f /tmp/cfd-route.$$
 
 cat > "$CLOUDFLARED_CONFIG" <<EOF
 tunnel: $TUNNEL_NAME

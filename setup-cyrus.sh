@@ -29,7 +29,8 @@
 #   DOMAIN              e.g. mikko.build
 #   TUNNEL_NAME         default: $(whoami)  (e.g. vibe, marketing)
 #   SUBDOMAIN           default: $TUNNEL_NAME.$DOMAIN
-#   PORT                default: 3456
+#   PORT                default: existing CYRUS_SERVER_PORT in $ENV_FILE,
+#                                otherwise first free port starting at 3456
 #   CYRUS_HOME          default: ~/.cyrus
 #   NODE_VERSION        default: 20
 #   NVM_VERSION         default: v0.40.1
@@ -39,7 +40,6 @@ set -euo pipefail
 # ─── Config ─────────────────────────────────────────────────────────────────
 REPO_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 CYRUS_HOME="${CYRUS_HOME:-$HOME/.cyrus}"
-PORT="${PORT:-3456}"
 DOMAIN="${DOMAIN:-}"
 TUNNEL_NAME="${TUNNEL_NAME:-$(whoami)}"
 SUBDOMAIN="${SUBDOMAIN:-}"
@@ -48,6 +48,30 @@ NVM_VERSION="${NVM_VERSION:-v0.40.1}"
 SYSTEMD_DIR="$HOME/.config/systemd/user"
 ENV_FILE="$CYRUS_HOME/.env"
 CONFIG_FILE="$CYRUS_HOME/config.json"
+
+# Port resolution: explicit $PORT override > value in existing .env >
+# first free port starting at 3456. Multiple Cyrus instances on the same
+# host (one per agent user) must not collide on the default port.
+is_port_in_use() {
+  if command -v ss >/dev/null 2>&1; then
+    ss -ltn "sport = :$1" 2>/dev/null | tail -n +2 | grep -q .
+  else
+    (exec 3<>/dev/tcp/127.0.0.1/"$1") 2>/dev/null
+  fi
+}
+find_free_port() {
+  local p=$1
+  while is_port_in_use "$p"; do p=$((p + 1)); done
+  echo "$p"
+}
+
+if [[ -z "${PORT:-}" ]]; then
+  if [[ -f "$ENV_FILE" ]]; then
+    PORT="$(awk -F= '$1=="CYRUS_SERVER_PORT"{print $2; exit}' "$ENV_FILE" | tr -d '[:space:]')"
+  fi
+  PORT="${PORT:-$(find_free_port 3456)}"
+fi
+
 CLOUDFLARED_CONFIG="$HOME/.cloudflared/${TUNNEL_NAME}.yml"
 CYRUS_SERVICE="cyrus.service"
 TUNNEL_SERVICE="cloudflared-${TUNNEL_NAME}.service"

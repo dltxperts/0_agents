@@ -27,7 +27,7 @@
 #
 # Optional environment overrides (otherwise prompted):
 #   DOMAIN              e.g. mikko.build
-#   TUNNEL_NAME         default: $(whoami)  (e.g. vibe, marketing)
+#   TUNNEL_NAME         default: $(whoami)-bot  (e.g. vibe-bot, marketing-bot)
 #   SUBDOMAIN           default: $TUNNEL_NAME.$DOMAIN
 #   PORT                default: existing CYRUS_SERVER_PORT in $ENV_FILE,
 #                                otherwise first free port starting at 3456
@@ -41,7 +41,7 @@ set -euo pipefail
 REPO_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 CYRUS_HOME="${CYRUS_HOME:-$HOME/.cyrus}"
 DOMAIN="${DOMAIN:-}"
-TUNNEL_NAME="${TUNNEL_NAME:-$(whoami)}"
+TUNNEL_NAME="${TUNNEL_NAME:-$(whoami)-bot}"
 SUBDOMAIN="${SUBDOMAIN:-}"
 NODE_VERSION="${NODE_VERSION:-20}"
 NVM_VERSION="${NVM_VERSION:-v0.40.1}"
@@ -234,7 +234,7 @@ else
   say "MANUAL STEP: create a Linear OAuth Application"
   cat <<EOF
   Open: https://linear.app/settings/api/applications/new
-    Name             : $(whoami)
+    Name             : $(whoami)-bot
     Developer URL    : https://github.com/cyrusagents/cyrus
     Callback URLs    : https://$SUBDOMAIN/callback
     Webhook URL      : https://$SUBDOMAIN/linear-webhook

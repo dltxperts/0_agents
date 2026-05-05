@@ -1,0 +1,26 @@
+model = "gpt-5.5"
+model_reasoning_effort = "high"
+
+approval_policy = "never"
+sandbox_mode = "workspace-write"
+web_search = "disabled"
+
+[sandbox_workspace_write]
+network_access = true
+writable_roots = [
+  "__HOME__/Coding",
+  "__HOME__/.cyrus",
+  "__HOME__/.local/bin",
+  "__HOME__/.codex/memories",
+  "/tmp",
+  "__XDG_RUNTIME_DIR__",
+__EXTRA_WRITABLE_ROOTS__
+]
+
+[shell_environment_policy]
+inherit = "all"
+ignore_default_excludes = true
+experimental_use_profile = true
+
+[projects."__HOME__"]
+trust_level = "trusted"

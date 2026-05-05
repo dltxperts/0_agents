@@ -119,7 +119,7 @@ If a bug is found during user testing, QA, MCP walkthrough, or showcase:
 | MockChatSource | Telegram API |
 | MockMailSource | Gmail API (MailSurface) |
 | MockSourceRuntime | Any generic source |
-| MockAgentSidecar | Claude API (agent responses) |
+| MockAgentSidecar | Agent engine/API responses |
 
 ### Test comment format
 ```

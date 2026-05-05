@@ -1,6 +1,14 @@
 #!/bin/bash
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCREENSHOT_SCRIPT="$SCRIPT_DIR/screenshot-upload.sh"
+
+if ! [ -x "$SCREENSHOT_SCRIPT" ]; then
+    echo "screenshot-upload.sh not found or not executable at: $SCREENSHOT_SCRIPT" >&2
+    exit 1
+fi
+
 # 1. Установка Hammerspoon если ещё нет
 if ! [ -d "/Applications/Hammerspoon.app" ]; then
     brew install --cask hammerspoon
@@ -8,10 +16,10 @@ fi
 
 # 2. Создание конфига
 mkdir -p ~/.hammerspoon
-cat > ~/.hammerspoon/init.lua <<'EOF'
+cat > ~/.hammerspoon/init.lua <<EOF
 hs.hotkey.bind({"cmd", "shift"}, "3", function()
   hs.task.new(
-    "/Users/mikael/Coding/0_agents/screenshot-upload.sh",
+    "$SCREENSHOT_SCRIPT",
     function(exitCode, stdOut, stdErr)
       if exitCode ~= 0 then
         hs.notify.new({

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Symlink the Claude Code configuration from this repo into ~/.claude/.
+# Symlink the Claude Code configuration from this repo into ~/.claude/
+# and install shared helper scripts into ~/.local/bin.
 # Idempotent: re-running detects existing correct symlinks and does nothing.
 # Safe: backs up real files / directories before replacing.
 #
@@ -69,6 +70,10 @@ for item in "${ITEMS[@]}"; do
   link_item "$item"
 done
 
+if [ -x "$REPO_DIR/install-bin.sh" ]; then
+  bash "$REPO_DIR/install-bin.sh"
+fi
+
 # MCP: register codex (user scope) so any Claude Code session can call it
 if command -v claude >/dev/null && command -v codex >/dev/null; then
   if claude mcp list 2>/dev/null | grep -q '^codex:'; then
@@ -84,4 +89,4 @@ if command -v claude >/dev/null && command -v codex >/dev/null; then
 fi
 
 echo ""
-echo "Done. Verify with:  ls -la \"$DST\""
+echo "Done. Verify with:  ls -la \"$DST\" \"$HOME/.local/bin\""

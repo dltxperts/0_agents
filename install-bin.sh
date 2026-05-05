@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Install shared local helper scripts into ~/.local/bin.
+
+set -euo pipefail
+
+REPO_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+BIN_SRC="$REPO_DIR/bin"
+BIN_DST="$HOME/.local/bin"
+
+[ -d "$BIN_SRC" ] || { echo "ERROR: $BIN_SRC not found"; exit 1; }
+
+install_bin_item() {
+  local name="$1"
+  local src="$BIN_SRC/$name"
+  local dst="$BIN_DST/$name"
+
+  [ -f "$src" ] || return 0
+  mkdir -p "$BIN_DST"
+
+  if [ -L "$dst" ]; then
+    local current
+    current=$(readlink "$dst")
+    if [ "$current" = "$src" ]; then
+      echo "✓ already linked: ~/.local/bin/$name"
+      return
+    fi
+    echo "  replacing stale symlink ~/.local/bin/$name (was → $current)"
+    rm "$dst"
+  elif [ -e "$dst" ]; then
+    local backup="${dst}.bak.$(date +%s)"
+    echo "  backing up existing ~/.local/bin/$name → $(basename "$backup")"
+    mv "$dst" "$backup"
+  fi
+
+  chmod +x "$src"
+  ln -s "$src" "$dst"
+  echo "✓ linked: ~/.local/bin/$name → $src"
+}
+
+install_bin_item agent-session-name
+install_bin_item frogmouth-tuned
+install_bin_item plan-view
+
+echo ""
+echo "Done. Verify with:  ls -la \"$BIN_DST\""

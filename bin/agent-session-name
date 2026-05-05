@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Rename the active Zellij session for multi-agent remote development.
+
+set -euo pipefail
+
+NAME="${1:-${AGENT_SESSION_NAME:-${TUNNEL_NAME:-$(whoami)-bot}}}"
+
+if command -v zellij >/dev/null 2>&1 && [ -n "${ZELLIJ:-}" ]; then
+  zellij action rename-session "$NAME"
+  printf 'Zellij session renamed to %s\n' "$NAME"
+else
+  printf 'Agent session name: %s\n' "$NAME"
+  printf 'Not inside Zellij; run this from a Zellij pane to rename the session.\n'
+fi
+
+# Also set a terminal title for clients that display it.
+printf '\033]0;%s\007' "$NAME"

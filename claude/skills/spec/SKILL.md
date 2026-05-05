@@ -181,11 +181,14 @@ Update the status at the top of the file to `Status: REVIEW`.
 
 **Goal:** Show the approved plan to the user.
 
-1. Present a summary:
+1. Run `plan-view <plan-path>` if the command exists. This opens the approved
+   markdown plan in a readable terminal viewer; inside Zellij it appears in a
+   floating pane.
+2. Present a summary:
    - Task (1-2 sentences)
    - Key decisions from spec
    - Number of stages, files affected, tests planned
-2. Say: "План утвержден Codex. Начинаем? (`/start-work`)"
+3. Say: "План утвержден Codex. Начинаем? (`/start-work`)"
 
 ---
 

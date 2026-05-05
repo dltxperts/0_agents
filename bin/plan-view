@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# Open a markdown plan in a readable terminal viewer.
+# Inside Zellij: vertical split on the right by default; pass
+#   PLAN_VIEW_PANE=floating to use a centered floating pane instead.
+# Outside Zellij: runs inline.
+
+set -euo pipefail
+
+usage() {
+  echo "usage: plan-view <plan.md>" >&2
+}
+
+[ "${1:-}" != "" ] || { usage; exit 2; }
+
+PLAN_PATH="$1"
+[ -f "$PLAN_PATH" ] || { echo "ERROR: plan file not found: $PLAN_PATH" >&2; exit 1; }
+
+has_frogmouth() {
+  local python="${FROGMOUTH_PYTHON:-}"
+  if [ -z "$python" ]; then
+    if [ -x "$HOME/.local/share/pipx/venvs/frogmouth/bin/python" ]; then
+      python="$HOME/.local/share/pipx/venvs/frogmouth/bin/python"
+    else
+      python="$(command -v python3 || true)"
+    fi
+  fi
+
+  [ -n "$python" ] && "$python" -c 'import frogmouth' >/dev/null 2>&1
+}
+
+if command -v frogmouth-tuned >/dev/null 2>&1 && has_frogmouth; then
+  VIEWER=(frogmouth-tuned "$PLAN_PATH")
+elif command -v glow >/dev/null 2>&1; then
+  VIEWER=(glow -p "$PLAN_PATH")
+else
+  VIEWER=(less -R "$PLAN_PATH")
+fi
+
+if [ -n "${ZELLIJ:-}" ] && command -v zellij >/dev/null 2>&1; then
+  PANE_MODE="${PLAN_VIEW_PANE:-right}"
+  PANE_NAME="plan: $(basename "$PLAN_PATH")"
+  PANE_CWD="$(dirname "$PLAN_PATH")"
+
+  case "$PANE_MODE" in
+    right|down)
+      zellij action new-pane -d "$PANE_MODE" \
+        --name "$PANE_NAME" --cwd "$PANE_CWD" -- "${VIEWER[@]}"
+      ;;
+    floating)
+      zellij action new-pane --floating --width 90% --height 90% \
+        --name "$PANE_NAME" --cwd "$PANE_CWD" -- "${VIEWER[@]}"
+      ;;
+    *)
+      echo "plan-view: unknown PLAN_VIEW_PANE=$PANE_MODE (expected right|down|floating)" >&2
+      exit 2
+      ;;
+  esac
+else
+  exec "${VIEWER[@]}"
+fi

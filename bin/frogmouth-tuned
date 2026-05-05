@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Frogmouth markdown viewer with plan-friendly styling.
+#
+# Detects a Python interpreter (pipx venv → system python3) and execs the
+# sibling .py script. The script is a real file — NOT fed via stdin heredoc —
+# so Textual's input thread can read keyboard events from the TTY.
+
+set -euo pipefail
+
+# Resolve symlinks so the sibling .py is found when invoked via
+# ~/.local/bin/frogmouth-tuned (which symlinks here from 0_agents/bin/).
+SELF="${BASH_SOURCE[0]}"
+if command -v readlink >/dev/null 2>&1; then
+  RESOLVED="$(readlink -f "$SELF" 2>/dev/null || true)"
+  [ -n "$RESOLVED" ] && SELF="$RESOLVED"
+fi
+SCRIPT_DIR="$( cd "$( dirname "$SELF" )" && pwd )"
+PY_SCRIPT="$SCRIPT_DIR/frogmouth-tuned.py"
+
+[ -f "$PY_SCRIPT" ] || { echo "ERROR: $PY_SCRIPT not found" >&2; exit 1; }
+
+PYTHON="${FROGMOUTH_PYTHON:-}"
+if [ -z "$PYTHON" ]; then
+  if [ -x "$HOME/.local/share/pipx/venvs/frogmouth/bin/python" ]; then
+    PYTHON="$HOME/.local/share/pipx/venvs/frogmouth/bin/python"
+  else
+    PYTHON="$(command -v python3 || true)"
+  fi
+fi
+
+[ -n "$PYTHON" ] || { echo "ERROR: python3 not found" >&2; exit 1; }
+
+exec "$PYTHON" "$PY_SCRIPT" "$@"

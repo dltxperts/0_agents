@@ -173,13 +173,14 @@ NODE_DIR="$(dirname "$(readlink -f "$(command -v node)")")"
 NPM_GLOBAL_BIN="$(npm prefix -g)/bin"
 BUN_DIR="$HOME/.bun/bin"
 LOCAL_BIN="$HOME/.local/bin"
+export PATH="$LOCAL_BIN:$PATH"
 
-# ─── 6. Symlink ~/.claude/ from this repo ───────────────────────────────────
+# ─── 6. Install repo-managed agent config ──────────────────────────────────
 if [ -x "$REPO_DIR/install.sh" ]; then
-  say "Linking ~/.claude/ from $REPO_DIR/claude (server mode — includes settings.json)"
+  say "Installing agent config from $REPO_DIR (server mode)"
   bash "$REPO_DIR/install.sh" --server
 else
-  warn "install.sh not found alongside this script — skipping ~/.claude/ link"
+  warn "install.sh not found alongside this script — skipping agent config"
 fi
 
 # ─── 6b. Subscription logins for both runners ───────────────────────────────
@@ -201,6 +202,12 @@ if [[ -f "$HOME/.codex/auth.json" ]]; then
 else
   codex login \
     || warn "codex login exited non-zero — retry with 'codex login'"
+fi
+
+# ─── 6c. Zellij session label ──────────────────────────────────────────────
+if command -v agent-session-name >/dev/null 2>&1; then
+  say "Naming terminal session"
+  agent-session-name "${AGENT_SESSION_NAME:-$TUNNEL_NAME}"
 fi
 
 # ─── 7. Cyrus home ──────────────────────────────────────────────────────────

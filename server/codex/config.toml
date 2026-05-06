@@ -31,3 +31,6 @@ trust_level = "trusted"
 
 [projects."/home/vibe/.cyrus/repos/magnis-app"]
 trust_level = "trusted"
+
+[mcp_servers.linear]
+url = "https://mcp.linear.app/mcp"

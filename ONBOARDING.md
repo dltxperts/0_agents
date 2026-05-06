@@ -191,7 +191,17 @@ Notable shared skills:
 
 ## Verification
 
-After install, sanity-check:
+After install, run the diagnostics:
+
+```bash
+bash ~/Coding/0_agents/doctor.sh           # client-mode checks
+bash ~/Coding/0_agents/doctor.sh --server  # also verify server profile + Cyrus
+bash ~/Coding/0_agents/doctor.sh --quiet   # only print failures
+```
+
+`doctor.sh` is read-only — it never changes anything, just reports what's there. Exit code 0 = all green; 1 = soft fail (something drifted; the failure line tells you which `install-*.sh` to re-run). Useful after `update.sh` and any time something feels off.
+
+Manual spot-checks if `doctor.sh` is unavailable:
 
 ```bash
 claude --version                  # 2.x

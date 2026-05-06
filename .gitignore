@@ -1,2 +1,5 @@
 .DS_Store
 *.swp
+/frogmouth-tuned
+/plan-view
+codex-config.tar.gz

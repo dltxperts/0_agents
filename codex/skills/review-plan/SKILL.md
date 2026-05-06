@@ -5,6 +5,8 @@ user-invocable: true
 disable-model-invocation: true
 ---
 
+<!-- KEEP-ALIGNED: claude/skills/review-plan/SKILL.md — both tools have a divergent copy of this skill (different project doc references and review tool). When changing this file, sync the twin or document why they intentionally diverge. -->
+
 # Plan Review
 
 Review the active plan, triage findings, loop until APPROVED, or escalate

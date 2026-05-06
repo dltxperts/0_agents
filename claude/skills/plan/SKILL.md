@@ -6,6 +6,8 @@ disable-model-invocation: true
 effort: high
 ---
 
+<!-- KEEP-ALIGNED: codex/skills/plan/SKILL.md — both tools have a divergent copy of this skill (different project doc references and review tool). When changing this file, sync the twin or document why they intentionally diverge. -->
+
 # Implementation Plan
 
 You are a software architect preparing a detailed implementation plan for a task in the Magnis project. After approval, this plan will be executed autonomously by an agent — it must be complete enough to work without further questions.
@@ -58,9 +60,9 @@ The TDD loop, verification commands, review gate, no-merge rule.
 ## Output format
 
 Present the plan as a single document with sections 1-9. Do NOT start implementation.
-After writing or updating the plan file, run `plan-view <plan-path>` if the
+After writing or updating the plan file, run `markdown-view <plan-path>` if the
 command exists. This opens the markdown in a readable terminal viewer; inside
-Zellij it appears in a floating pane. If `plan-view` is missing, continue with
+Zellij it appears in a floating pane. If `markdown-view` is missing, continue with
 the normal text summary.
 
 ## Plan file location (single source of truth)

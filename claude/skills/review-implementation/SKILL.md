@@ -6,6 +6,8 @@ disable-model-invocation: true
 effort: high
 ---
 
+<!-- KEEP-ALIGNED: codex/skills/review-implementation/SKILL.md — both tools have a divergent copy of this skill (different project doc references and review tool). When changing this file, sync the twin or document why they intentionally diverge. -->
+
 # Review Implementation
 
 Post-implementation review gate. Run after an agent has made code changes.

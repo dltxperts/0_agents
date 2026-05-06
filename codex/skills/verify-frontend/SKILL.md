@@ -6,6 +6,8 @@ disable-model-invocation: false
 paths: frontend/**
 ---
 
+<!-- KEEP-ALIGNED: claude/skills/verify-frontend/SKILL.md — both tools have a divergent copy of this skill (different project doc references and review tool). When changing this file, sync the twin or document why they intentionally diverge. -->
+
 # Frontend Verification Protocol
 
 App-visible frontend changes MUST be verified in a real browser, not only with

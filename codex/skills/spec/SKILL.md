@@ -6,6 +6,8 @@ disable-model-invocation: true
 effort: high
 ---
 
+<!-- KEEP-ALIGNED: claude/skills/spec/SKILL.md — both tools have a divergent copy of this skill (different project doc references and review tool). When changing this file, sync the twin or document why they intentionally diverge. -->
+
 # Spec-to-Plan Pipeline
 
 You are guiding a task from raw idea to approved implementation plan. Everything lives in **one file** that grows through phases. You MUST follow the phases in order and NEVER skip ahead.
@@ -180,7 +182,7 @@ Update the status at the top of the file to `Status: REVIEW`.
 
 **Goal:** Show the approved plan to the user.
 
-1. Run `plan-view <plan-path>` if the command exists. This opens the approved
+1. Run `markdown-view <plan-path>` if the command exists. This opens the approved
    markdown plan in a readable terminal viewer; inside Zellij it appears in a
    floating pane.
 2. Present a summary:

@@ -61,7 +61,7 @@ If you only have `less`, the file still opens — just unstyled.
 
 ## On failures
 
-- **`zellij action new-pane` fails with permission/socket error** — the Codex (or Claude) sandbox profile must include `$XDG_RUNTIME_DIR` in its writable roots. Ask the operator to rerun `~/Coding/0_agents/install-codex.sh` (or the Claude equivalent) and start a fresh agent session.
+- **`zellij action new-pane` fails with permission/socket error** — the Codex (or Claude) sandbox profile must include `$XDG_RUNTIME_DIR` in its writable roots. Ask the operator to rerun `~/Coding/0_agents/install-codex-config.sh` (or the Claude equivalent) and start a fresh agent session.
 - **No viewer found** — `markdown-view` falls back to `less -R` automatically. If even `less` is missing, error out cleanly; don't paste the file inline.
 
 ## Notes

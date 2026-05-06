@@ -7,7 +7,7 @@
 #   1. git pull --ff-only          (fast-forward; aborts on diverged history)
 #   2. install.sh                  (claude+codex symlinks, +server flag passthrough)
 #   3. install-bin.sh              (~/.local/bin/markdown-view, ...)
-#   4. install-codex.sh            (codex/config.toml render)
+#   4. install-codex-config.sh            (codex/config.toml render)
 #   5. install-runtimes.sh         (claude-code + codex npm globals — upgrade)
 #   6. install-linear-mcp.sh       (Linear MCP register; OAuth login skipped)
 #   7. install-lazyvim.sh          (only if --with-lazyvim or detected nvim use)
@@ -102,12 +102,12 @@ else
   bash "$REPO_DIR/install-bin.sh"
 fi
 
-# ─── 4. install-codex.sh ─────────────────────────────────────────────────
+# ─── 4. install-codex-config.sh ─────────────────────────────────────────────────
 if should_skip codex-config; then
-  ok "skipping install-codex.sh"
+  ok "skipping install-codex-config.sh"
 else
-  say "install-codex.sh"
-  bash "$REPO_DIR/install-codex.sh"
+  say "install-codex-config.sh"
+  bash "$REPO_DIR/install-codex-config.sh"
 fi
 
 # ─── 5. install-runtimes.sh ──────────────────────────────────────────────

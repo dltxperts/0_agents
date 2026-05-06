@@ -12,7 +12,7 @@
 #   3. cloudflared (system tool — Cyrus, dev tunnels, anything else)
 #   4. install.sh --server  (claude+codex symlinks + wide-permission settings)
 #   5. install-bin.sh       (~/.local/bin/markdown-view, frogmouth-tuned, ...)
-#   6. install-codex.sh     (Codex config.toml render)
+#   6. install-codex-config.sh     (Codex config.toml render)
 #   7. install-runtimes.sh  (claude-code + codex npm CLIs)
 #   8. install-linear-mcp.sh (Linear MCP register; OAuth login deferred)
 #   9. install-lazyvim.sh   (LazyVim — useful on Ubuntu where apt nvim is old)
@@ -133,9 +133,9 @@ if [[ -x "$REPO_DIR/install-bin.sh" ]]; then
 fi
 
 # ─── 6. Codex config.toml render ────────────────────────────────────────────
-if [[ -x "$REPO_DIR/install-codex.sh" ]]; then
+if [[ -x "$REPO_DIR/install-codex-config.sh" ]]; then
   say "Rendering Codex config.toml"
-  bash "$REPO_DIR/install-codex.sh"
+  bash "$REPO_DIR/install-codex-config.sh"
 fi
 
 # ─── 7. Runtimes (claude-code + codex npm CLIs) ─────────────────────────────

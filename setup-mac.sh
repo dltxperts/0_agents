@@ -9,7 +9,7 @@
 #   0. Sanity checks (running as user, Homebrew + git present)
 #   1. install.sh (claude+codex symlinks; NOT --server on a client)
 #   2. install-bin.sh       (~/.local/bin/markdown-view, frogmouth-tuned, ...)
-#   3. install-codex.sh     (Codex config.toml render)
+#   3. install-codex-config.sh     (Codex config.toml render)
 #   4. install-runtimes.sh  (claude-code + codex npm CLIs)
 #   5. install-linear-mcp.sh (Linear MCP register)
 #   6. install-lazyvim.sh   (LazyVim — operator wants to learn nvim on Mac too)
@@ -78,9 +78,9 @@ bash "$REPO_DIR/install.sh"
 say "Installing ~/.local/bin helpers"
 bash "$REPO_DIR/install-bin.sh"
 
-# ─── 3. install-codex.sh ────────────────────────────────────────────────────
+# ─── 3. install-codex-config.sh ────────────────────────────────────────────────────
 say "Rendering Codex config.toml"
-bash "$REPO_DIR/install-codex.sh"
+bash "$REPO_DIR/install-codex-config.sh"
 
 # ─── 4. install-runtimes.sh (claude-code + codex npm CLIs) ──────────────────
 if [[ "$DO_RUNTIMES" -eq 1 ]]; then

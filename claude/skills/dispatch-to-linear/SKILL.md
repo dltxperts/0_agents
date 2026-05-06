@@ -13,7 +13,7 @@ You are the **client side** of a two-skill split:
 
 - **`/dispatch-to-linear` (this skill)** — takes an approved plan from the local repo and produces three artifacts:
   1. A **Linear issue** that points at the work
-  2. A **git branch** `<bot>/mag-N-<slug>` (Cyrus convention) containing the plan as its first commit
+  2. A **git branch** `<linear-issue-gitBranchName>` (Cyrus convention) containing the plan as its first commit
   3. An OPTIONAL **draft GitHub PR** from that branch into the base ref, with the same pointer body
 - **`/execute-from-linear` (server-side, runs inside Cyrus's worktree)** — Cyrus picks up the issue assignment from Linear, creates the worktree at `~/.cyrus/worktrees/MAG-N/` from the branch we pre-created, spawns the bot session in it. The bot then runs `/execute-from-linear` to read the plan and execute stages.
 
@@ -88,7 +88,19 @@ Three artifacts must be planned coherently before any write:
 
 ### (b) Git branch
 
-- Name: `<bot>/mag-N-<slug>` (LOWERCASE `mag-N`) — this matches Cyrus's auto-naming convention from Linear's `issue.branchName`. When Cyrus picks up the assignment, it expects to find a branch with this exact name and uses it for `git worktree add`. If our branch name diverges, Cyrus may create a NEW empty branch, and the bot won't find the plan.
+**Branch name MUST come from Linear's `issue.gitBranchName` field**, not derived from the slug. Linear auto-generates this field at issue creation time as `<assignee-username>/<lowercased-team-prefix>-<id>-<title-slug>` (e.g. `mikael/mag-19-observability-dashboard-frontend-for-content-os-state`). When Cyrus picks up the assignment, it creates the worktree on a branch with EXACTLY this name. If our branch name diverges, Cyrus creates a NEW empty branch and the bot cannot find the plan we committed.
+
+The skill MUST:
+
+1. After `mcp__linear__save_issue` returns, read `response.gitBranchName`.
+2. Use that exact string as the branch name.
+3. If the assignee field on the Linear side maps to a human (typical: the operator who triggered the dispatch), the prefix will be the human's Linear username — not the bot's. That's fine; Cyrus uses the issue identifier (e.g. `mag-19`) to match, not the prefix.
+
+Common-but-wrong patterns to avoid:
+- ❌ `<bot>/mag-N-<slug>` derived locally from the bot name + slug — this is what dispatch-to-linear@v1 did and broke MAG-19. The Linear-side title slugifier produces a longer string than the local plan slug, AND uses the assignee username (often the human, not the bot) for the prefix, so the names diverged.
+- ❌ `feat/<slug>` — no Linear identifier; Linear ↔ GitHub auto-link won't match.
+- ❌ uppercase `MAG-N` in the branch — Linear's gitBranchName is always lowercase (`mag-19`, not `MAG-19`).
+
 - Base: the resolved base ref (default `staging`).
 - First commit: `plan(<slug>): approved spec — <one-line task summary>` adding `docs/plans/<slug>.md`. Author = whoever ran the dispatch.
 
@@ -117,7 +129,7 @@ If pre-creating:
 **Plan:** [`docs/plans/<slug>.md`](<plan_file_url_on_branch>)
 **Repo:** <plan_repo>
 **Base:** <base_ref>
-**Branch:** `<bot>/mag-N-<slug>`
+**Branch:** `<linear-issue-gitBranchName>`
 **PR:** #<pr-number> (draft)  ← (omit on Linear-issue first write; filled in Step 6)
 **Slug:** <slug>
 
@@ -164,14 +176,14 @@ Print the full triple-artifact plan to the operator before any write:
 - Body: pointer + summary + acceptance + bot identity (~30 lines)
 
 ### Git branch (created locally + pushed to origin)
-- Name: <bot>/mag-<N>-<slug>     (MAG-N filled after Linear issue is created)
+- Name: <linear-issue-gitBranchName>     (MAG-N filled after Linear issue is created)
 - Base: <base_ref>
 - First commit: plan(<slug>): approved spec — <summary>
 - Files in commit: docs/plans/<slug>.md
 
 ### Draft GitHub PR
 - Title: <plan H1>
-- Base: <base_ref>  ← Head: <bot>/mag-<N>-<slug>
+- Base: <base_ref>  ← Head: <linear-issue-gitBranchName>
 - Body: same pointer body as Linear issue
 - Status: draft
 
@@ -194,11 +206,14 @@ WAIT for explicit YES. On `no` — clean stop, no creation. On `edit` — adjust
 
 After explicit YES:
 
-1. **Create the Linear issue** via `mcp__linear__save_issue` with the pointer body (PR URL field empty for now). Capture `MAG-N` and `issue_url`.
+1. **Create the Linear issue** via `mcp__linear__save_issue` with the pointer body (PR URL field empty for now). Capture from the response:
+   - `id` (e.g. `MAG-19`)
+   - `url` (Linear permalink)
+   - **`gitBranchName`** — Linear's auto-generated branch name. THIS IS THE BRANCH NAME for everything below. Don't derive from slug; don't add prefixes; use it verbatim. (See Step 4(b) for why.)
 2. **Create the local branch** from the base ref:
    ```
    git fetch origin <base_ref>
-   git checkout -b <bot>/mag-<N>-<slug> origin/<base_ref>
+   git checkout -b <linear-issue-gitBranchName> origin/<base_ref>
    ```
 3. **Commit the plan** if it's not already in the branch's history:
    ```
@@ -208,13 +223,13 @@ After explicit YES:
    If the plan is already committed somewhere accessible from this branch, skip — never duplicate.
 4. **Push** the branch:
    ```
-   git push -u origin <bot>/mag-<N>-<slug>
+   git push -u origin <linear-issue-gitBranchName>
    ```
 5. **Open the draft PR** via `gh` (skip if `--no-pr`):
    ```
    gh pr create --draft \
      --base <base_ref> \
-     --head <bot>/mag-<N>-<slug> \
+     --head <linear-issue-gitBranchName> \
      --title "<plan H1>" \
      --body "<pointer-body-with-PR-#-omitted-or-self-ref>"
    ```
@@ -223,7 +238,7 @@ After explicit YES:
 7. **Print the result**:
    ```
    ✓ Linear issue: <issue_url>           (MAG-N)
-   ✓ Branch: <bot>/mag-N-<slug>           (pushed to origin)
+   ✓ Branch: <linear-issue-gitBranchName>           (pushed to origin)
    ✓ Draft PR: <pr_url>                  (#M, base=<base_ref>)
    ✓ CI started: <ci_run_url>            (will re-run on each bot push)
 
@@ -245,7 +260,7 @@ Append to the plan file:
 ```markdown
 ## Linear
 
-Dispatched as [MAG-N](<issue_url>) on YYYY-MM-DD; PR [#M](<pr_url>); branch `<bot>/mag-N-<slug>`; assigned to <bot-name>.
+Dispatched as [MAG-N](<issue_url>) on YYYY-MM-DD; PR [#M](<pr_url>); branch `<linear-issue-gitBranchName>`; assigned to <bot-name>.
 Session archive: ~/.claude/sessions-by-plan/<slug>.jsonl
 ```
 
@@ -253,7 +268,7 @@ The plan is on the dispatch branch already (committed in Step 6). Add a follow-u
 ```bash
 git add docs/plans/<slug>.md
 git commit -m "docs(plan): link <slug> to Linear MAG-N + PR #M"
-git push origin <bot>/mag-N-<slug>
+git push origin <linear-issue-gitBranchName>
 ```
 
 The push triggers CI again — fine, idempotent.
@@ -286,11 +301,11 @@ git checkout <base_ref>
 
 # if the plan ever lived in the staging WT (the /spec workflow leaves it
 # uncommitted on staging until dispatch), the checkout above wipes it
-# from the staging WT — the plan now lives ONLY on <bot>/mag-N-<slug>.
+# from the staging WT — the plan now lives ONLY on <linear-issue-gitBranchName>.
 
 # remove the local feature branch — origin has it, no value keeping
 # the local copy now (re-pull on demand).
-git branch -D <bot>/mag-N-<slug>
+git branch -D <linear-issue-gitBranchName>
 
 # if a worktree was used during planning (e.g. /spec created
 # .worktrees/<slug>), remove it:
@@ -299,7 +314,7 @@ git branch -D <bot>/mag-N-<slug>
 
 After cleanup:
 - Local repo: on base ref, clean WT, no stale branches, no stale worktrees
-- Origin: branch `<bot>/mag-N-<slug>` with plan + footer commits
+- Origin: branch `<linear-issue-gitBranchName>` with plan + footer commits
 - Linear: MAG-N pointing at branch + (optional) PR
 - Archive: `~/.claude/sessions-by-plan/<slug>.jsonl`
 - Cyrus: about to receive Linear webhook → spawn bot in its own worktree
@@ -337,7 +352,7 @@ After cleanup:
 - **NEVER skip the session archive** unless the JSONL is genuinely missing. The conversation is the only artifact that captures *why* a decision was made — losing it is irreversible. Surface a warning if the lookup fails, but the dispatch itself completes.
 - **NEVER commit the session JSONL into the repo.** Transcripts can carry secrets, env values, machine-specific paths. Archive lives at `~/.claude/sessions-by-plan/`; plan footer points at it.
 - **NEVER skip Step 8 local cleanup** unless `--keep-local` was passed. Local artifacts after dispatch grow into a junk pile fast.
-- **NEVER use the lowercase `mag` AND uppercase `MAG` interchangeably in the branch name.** Cyrus expects lowercase; the Linear identifier itself is uppercase. Branch: `<bot>/mag-42-<slug>` ✓ ; `<bot>/MAG-42-<slug>` ✗ (Cyrus may not match).
+- **NEVER construct the branch name yourself.** Always use `response.gitBranchName` from `mcp__linear__save_issue`'s response. Linear is the source of truth; deriving locally from slug + bot name will diverge from what Cyrus expects (this happened on MAG-19 — see Step 4(b) for the breakage details).
 
 ## When NOT to use this skill
 

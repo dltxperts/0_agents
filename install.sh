@@ -6,7 +6,7 @@
 #
 # Usage:
 #   install.sh            # Mac / generic: links Claude + Codex shared config
-#   install.sh --server   # Server: ALSO links settings.json (wide-permission profile)
+#   install.sh --server   # ALSO links server-only wide-permission settings
 
 set -euo pipefail
 
@@ -29,16 +29,34 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+if [[ "$SERVER_MODE" -eq 0 && "$(uname -s)" == "Linux" ]]; then
+  if [[ -t 0 ]]; then
+    read -r -p "Linux detected. Install server version with wide-permission settings? [y/N] " reply
+    case "$reply" in
+      [Yy]|[Yy][Ee][Ss])
+        SERVER_MODE=1
+        ;;
+      *)
+        echo "  continuing with non-server install"
+        ;;
+    esac
+  else
+    echo "  Linux detected. Re-run with --server to install wide-permission server settings."
+  fi
+fi
+
 REPO_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 CLAUDE_SRC="$REPO_DIR/claude"
 CODEX_SRC="$REPO_DIR/codex"
 SHARED_SRC="$REPO_DIR/shared"
+SERVER_SRC="$REPO_DIR/server"
 CLAUDE_DST="$HOME/.claude"
 CODEX_DST="$HOME/.codex"
 
 [ -d "$CLAUDE_SRC" ] || { echo "ERROR: $CLAUDE_SRC not found — is this the 0_agents repo root?"; exit 1; }
 [ -d "$CODEX_SRC" ] || { echo "ERROR: $CODEX_SRC not found — is this the 0_agents repo root?"; exit 1; }
 [ -d "$SHARED_SRC/lang" ] || { echo "ERROR: $SHARED_SRC/lang not found — is this the 0_agents repo root?"; exit 1; }
+[ -d "$SERVER_SRC" ] || { echo "ERROR: $SERVER_SRC not found — is this the 0_agents repo root?"; exit 1; }
 
 mkdir -p "$CLAUDE_DST" "$CODEX_DST"
 
@@ -109,10 +127,6 @@ link_codex_skill() {
 #  skills/ — user-invoked slash commands (/spec, /plan, /review-*, etc.)
 #           Format: skills/<name>/SKILL.md
 CLAUDE_ITEMS=(CLAUDE.md agents skills)
-if [[ "$SERVER_MODE" -eq 1 ]]; then
-  CLAUDE_ITEMS+=(settings.json)
-  echo "  (server mode: also linking settings.json)"
-fi
 
 for item in "${CLAUDE_ITEMS[@]}"; do
   link_item "~/.claude/$item" "$CLAUDE_SRC/$item" "$CLAUDE_DST/$item"
@@ -130,6 +144,12 @@ for skill_dir in "$CODEX_SRC"/skills/*; do
 done
 link_item "~/.codex/agents" "$CODEX_SRC/agents" "$CODEX_DST/agents"
 link_item "~/.codex/lang" "$SHARED_SRC/lang" "$CODEX_DST/lang"
+
+if [[ "$SERVER_MODE" -eq 1 ]]; then
+  echo "  (server mode: linking wide-permission settings)"
+  link_item "~/.claude/settings.json" "$SERVER_SRC/claude/settings.json" "$CLAUDE_DST/settings.json"
+  link_item "~/.codex/config.toml" "$SERVER_SRC/codex/config.toml" "$CODEX_DST/config.toml"
+fi
 
 if [ -x "$REPO_DIR/install-bin.sh" ]; then
   bash "$REPO_DIR/install-bin.sh"

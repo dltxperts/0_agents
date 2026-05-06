@@ -1,0 +1,33 @@
+model = "gpt-5.5"
+model_reasoning_effort = "high"
+approval_policy = "never"
+sandbox_mode = "workspace-write"
+web_search = "disabled"
+
+[sandbox_workspace_write]
+network_access = true
+writable_roots = [
+    "/home/vibe/Coding/0_agents",
+    "/home/vibe/Coding/magnis-app/.git",
+    "/home/vibe/Coding/magnis-app/.worktrees",
+    "/home/vibe/.codex/memories",
+    "/tmp",
+    "/run/user/1002/codex-vibe"
+  ]
+
+[shell_environment_policy]
+inherit = "all"
+ignore_default_excludes = true
+experimental_use_profile = true
+
+[projects."/home/vibe"]
+trust_level = "trusted"
+
+[projects."/home/vibe/Coding/0_agents"]
+trust_level = "trusted"
+
+[projects."/home/vibe/Coding/magnis-app"]
+trust_level = "trusted"
+
+[projects."/home/vibe/.cyrus/repos/magnis-app"]
+trust_level = "trusted"

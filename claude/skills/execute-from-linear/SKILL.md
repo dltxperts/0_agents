@@ -47,11 +47,53 @@ Use the Linear MCP tools (or whatever issue-tracker interface Cyrus exposes) to:
 2. Post:
    ```
    Picked up. Plan: docs/plans/<slug>.md (Status: APPROVED).
-   Will run N stages sequentially, one commit + one push per stage.
-   verify-and-ship will mark the PR ready for review when done.
+   First reading the plan end-to-end; if anything is ambiguous I'll
+   ask before starting Stage 0. Otherwise stages run sequentially,
+   one commit + one push per stage. verify-and-ship marks the PR
+   ready when done.
    ```
 
-## Step 3: Implement stages sequentially
+## Step 3: Pre-execution clarification round (Q&A)
+
+After reading the plan but BEFORE writing any code, do an honest self-review:
+
+- Are any DEC / CON / INV in tension with each other?
+- Does any stage reference a file path / API / dependency that doesn't exist or has been renamed?
+- Are any RED tests unwriteable as specified (the framework can't express them, the invariant doesn't compose, the harness is missing)?
+- Is the scope of "minimum implementation" unclear for any stage?
+- Does the plan assume something about the environment that may not hold (env var present, service running, secret available)?
+
+**If you have ANY ambiguity** — post it on Linear as a numbered list, ONE comment containing all your questions:
+
+```
+Pre-execution review — N question(s) before starting Stage 0.
+
+1. **<short title>** — <plan reference>
+   <question>. Options I see:
+   (a) <option>
+   (b) <option>
+   <which / open>?
+
+2. **<short title>** — <plan reference>
+   <question>. <options or open>.
+
+…
+
+Will not start Stage 0 until all are resolved. Worktree intact;
+issue stays In Progress.
+```
+
+Then **WAIT**. Cyrus's webhook on operator reply will wake you up; re-read the comment thread, check whether ALL questions are answered. If yes — post a one-liner ("All clarified, starting Stage 0") and proceed to Step 4. If new follow-ups arose from the operator's answer, ask them in a second numbered list and wait again.
+
+**If you have NO ambiguity** — post:
+```
+Plan reviewed end-to-end, no ambiguities. Starting Stage 0.
+```
+and proceed immediately.
+
+The Q&A round is the ONLY interactive phase. Once Stage 0 starts, you do NOT pause to ask questions — stage transitions are automatic per "Anti-patterns" below. Any question that surfaces mid-execution is a STOP, not a question. Front-load them here.
+
+## Step 4: Implement stages sequentially
 
 For each stage in order:
 
@@ -71,7 +113,7 @@ If a stage's test passes immediately on current code → the test doesn't captur
 
 If a stage is impossible (file path drifted in the plan, dependency missing, the invariant doesn't compose with the framework) → STOP, comment, hand to operator. Don't re-interpret the plan.
 
-## Step 4: After ALL stages — `/review-implementation`
+## Step 5: After ALL stages — `/review-implementation`
 
 Once the last stage commit is pushed:
 
@@ -80,7 +122,7 @@ Once the last stage commit is pushed:
 3. **NEEDS_WORK with REAL findings:** fix each, separate commit `audit-fix REAL #N: <summary>`, push after each. Re-run `/review-implementation`. Cap: 2 review rounds. After round 2, surface remaining findings in a Linear comment and STOP — operator decides.
 4. **NEEDS_HUMAN_DECISION:** comment the ASK_USER findings; STOP. Don't guess.
 
-## Step 5: Plan footer + hand off to `verify-and-ship`
+## Step 6: Plan footer + hand off to `verify-and-ship`
 
 1. Append to `docs/plans/<slug>.md` (in this worktree):
    ```markdown
@@ -106,7 +148,7 @@ Once the last stage commit is pushed:
 
 Don't reimplement what `verify-and-ship` does. Just invoke it.
 
-## Step 6: After verify-and-ship completes
+## Step 7: After verify-and-ship completes
 
 `verify-and-ship` does the Linear ship comment + state transition itself. Your job here ends. STOP. Do NOT merge.
 
@@ -125,6 +167,8 @@ The human reviewer takes it from there. When they merge, content-os `LinearSyncS
 
 - **NEVER `git worktree add` or `git checkout`.** Cyrus put you in the right place. If you're not, STOP — that's a Cyrus / dispatch bug, not your fix.
 - **NEVER re-plan.** Plan is approved. If wrong, STOP and comment.
+- **NEVER skip the Step 3 pre-execution Q&A round** when you have ambiguity. Front-load questions; once Stage 0 starts, questions become STOPs. Ask everything you need upfront in one numbered comment, then go silent and execute.
+- **NEVER pause mid-stage to ask a clarifying question.** That's a STOP, not a question. The Q&A window is Step 3, before Stage 0. After that, ambiguity → STOP + comment + wait.
 - **NEVER skip RED.** Every stage starts with a failing test.
 - **NEVER batch stages into one commit.** One commit per stage; commit messages must match the plan exactly.
 - **NEVER skip the per-stage push.** PR conversation depends on per-stage CI.

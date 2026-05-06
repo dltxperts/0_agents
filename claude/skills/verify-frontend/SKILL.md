@@ -5,6 +5,8 @@ user-invocable: true
 disable-model-invocation: false
 ---
 
+<!-- KEEP-ALIGNED: codex/skills/verify-frontend/SKILL.md — both tools have a divergent copy of this skill (different project doc references and review tool). When changing this file, sync the twin or document why they intentionally diverge. -->
+
 # Verify Frontend
 
 Visual changes need visual verification. Typecheck / lint / build are

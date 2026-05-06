@@ -6,6 +6,8 @@ disable-model-invocation: true
 effort: high
 ---
 
+<!-- KEEP-ALIGNED: codex/skills/plan/SKILL.md — both tools have a divergent copy of this skill (different project doc references and review tool). When changing this file, sync the twin or document why they intentionally diverge. -->
+
 # Implementation Plan
 
 You are a software architect preparing a detailed implementation plan for a task in the Magnis project. After approval, this plan will be executed autonomously by an agent — it must be complete enough to work without further questions.

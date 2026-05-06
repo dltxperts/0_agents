@@ -6,6 +6,8 @@ disable-model-invocation: true
 effort: high
 ---
 
+<!-- KEEP-ALIGNED: claude/skills/spec/SKILL.md — both tools have a divergent copy of this skill (different project doc references and review tool). When changing this file, sync the twin or document why they intentionally diverge. -->
+
 # Spec-to-Plan Pipeline
 
 You are guiding a task from raw idea to approved implementation plan. Everything lives in **one file** that grows through phases. You MUST follow the phases in order and NEVER skip ahead.

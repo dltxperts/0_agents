@@ -15,37 +15,75 @@ You are transitioning from an approved plan to implementation. Follow this proto
 
 Before writing any code, answer these questions:
 
-1. **Is there an approved plan?** If not — stop. Go back to `/plan`.
+1. **Is there an approved plan in context?** Resolve via Step 0 below. If none — stop, go back to `/spec` or `/plan`.
 2. **Am I in a worktree?** If not — create one (Step 1 below). NEVER implement in the main working tree.
 3. **Is staging green?** If not — fix staging first. No work starts on a broken staging.
 
-## Step 1: Create Worktree
+## Step 0: Locate the approved plan
+
+Two resolution paths, in order — no other heuristics:
+
+1. **Explicit argument** — `/start-work <plan-path>`. Use it directly after verifying the file exists and `Status: APPROVED`.
+2. **Conversation context** — look at the current conversation. Is there a single specific plan the operator just discussed (finished `/spec` for it, opened it in `plan-view`, asked a question about it)? If yes — propose it and CONFIRM: `"Starting work on docs/plans/<X>.md. Correct? (yes / no — name the plan you mean)"`. Only proceed on yes.
+
+If neither path is clear — STOP and ask the operator in natural language:
+```
+Which plan should I implement? Examples:
+  - "the dashboard one"
+  - "docs/plans/x-api-migration.md"
+  - "the spec we just discussed"
+```
+Then resolve their answer, confirm the match before proceeding. The operator's words are the source of truth; never silently fall back to a filesystem heuristic.
+
+If the resolved plan does not have `Status: APPROVED` — STOP, ask the operator: route to `/spec` / `/review-plan` first, or override explicitly.
+
+Extract from the chosen plan:
+- `slug` — filename without `.md` (used as worktree directory + branch suffix)
+- `title` — first H1 (used in commit messages and PR title later)
+
+## Step 1: Create Worktree with the plan as first commit
 
 MANDATORY for all feature work. NEVER implement in the main working tree.
 
-### Worktree location and naming
+### Worktree location, branch naming, and the plan-commit
 
-- **Directory**: `.worktrees/<descriptive-name>` inside the repo root
-- **Name must describe the work**, not be a random hash. Derive from the plan title or branch name.
-- **Branch naming**: `feat/<topic>`, `fix/<topic>`, `refactor/<topic>`, `task/<number>-<topic>`
-- One agent = one worktree = one branch. No sharing.
+- **Worktree directory**: `.worktrees/<slug>/` inside the repo root (slug from Step 0).
+- **Branch name**: `feat/<slug>` — derived from the plan slug, no random hashes. (For dispatched-to-Linear work this is `<bot>/mag-N-<slug>` instead — that's `/dispatch-to-linear`'s territory; for local /start-work, just `feat/<slug>`.)
+- **One agent = one worktree = one branch.** No sharing.
+- **The plan is the first commit on the branch.** This way the plan + implementation arrive together in the eventual PR; staging never carries "planned but not implemented" docs.
 
 ```bash
 REPO_ROOT=$(git rev-parse --show-toplevel)
-BRANCH="feat/<descriptive-topic>"
-WT_NAME="<descriptive-name>"   # e.g. "hero-e2e-test", "email-send-fix", "trigger-gate-mock"
-WT_PATH="$REPO_ROOT/.worktrees/$WT_NAME"
+SLUG="<slug-from-step-0>"
+BRANCH="feat/$SLUG"
+WT_PATH="$REPO_ROOT/.worktrees/$SLUG"
 
+# Create the worktree branched off staging, including the plan file
+# in working tree (it follows from the staging WT if it was uncommitted
+# there during /spec).
 mkdir -p "$REPO_ROOT/.worktrees"
 git worktree add -b "$BRANCH" "$WT_PATH" staging
+
+cd "$WT_PATH"
+
+# Commit the plan as the first commit. If the plan was already part of
+# the worktree (because /spec wrote it before /start-work), it's right
+# here. If /spec wrote to staging WT and that WT is dirty, copy/move
+# it in first.
+if [ ! -f "docs/plans/$SLUG.md" ]; then
+  echo "ERROR: docs/plans/$SLUG.md not in worktree — bring it in first"
+  exit 1
+fi
+git add "docs/plans/$SLUG.md"
+git commit -m "plan($SLUG): approved spec"
 ```
 
-**Examples of GOOD names**: `.worktrees/hero-e2e-test`, `.worktrees/gmail-history-api`, `.worktrees/contact-aggregation`
-**Examples of BAD names**: `.worktrees/worktree-agent-a03de810`, `/tmp/wt-hero-e2e`, `.worktrees/fix-1`
+**Examples of GOOD branch names**: `feat/dashboard-frontend`, `feat/email-send-fix`, `feat/trigger-gate-mock`.
+**Examples of BAD names**: `feat/work`, `task/123`, `.worktrees/worktree-agent-a03de810`.
 
 The `.worktrees/` directory is in `.gitignore` — worktrees are local-only.
 
-If you are already in a worktree (check: `git rev-parse --show-toplevel` differs from main repo root), proceed to Step 2.
+If you are already in a worktree (check: `git rev-parse --show-toplevel` differs from main repo root), skip to Step 2 — but verify the plan-commit is already at the head of your branch's history. If not, add it now before any implementation work.
 
 ## Step 2: Verify Staging is Green (tiered)
 
@@ -126,6 +164,8 @@ Stage 3: <description>
 
 ## Absolute Prohibitions
 
+- NEVER pick a plan by mtime. Use Step 0 — explicit path, conversation context, or ask the operator.
+- NEVER skip the plan-commit on the new branch. The plan must be the first commit; implementation stages stack on top.
 - NEVER work in the main tree. If you catch yourself editing files outside a worktree — STOP.
 - NEVER merge to staging or main. Only the user does this.
 - NEVER use `cp` or `git checkout <branch> -- <files>` to move code between trees.

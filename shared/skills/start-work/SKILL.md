@@ -24,7 +24,7 @@ Before writing any code, answer these questions:
 Two resolution paths, in order — no other heuristics:
 
 1. **Explicit argument** — `/start-work <plan-path>`. Use it directly after verifying the file exists and `Status: APPROVED`.
-2. **Conversation context** — look at the current conversation. Is there a single specific plan the operator just discussed (finished `/spec` for it, opened it in `plan-view`, asked a question about it)? If yes — propose it and CONFIRM: `"Starting work on docs/plans/<X>.md. Correct? (yes / no — name the plan you mean)"`. Only proceed on yes.
+2. **Conversation context** — look at the current conversation. Is there a single specific plan the operator just discussed (finished `/spec` for it, opened it in `markdown-view`, asked a question about it)? If yes — propose it and CONFIRM: `"Starting work on docs/plans/<X>.md. Correct? (yes / no — name the plan you mean)"`. Only proceed on yes.
 
 If neither path is clear — STOP and ask the operator in natural language:
 ```

@@ -58,9 +58,9 @@ The TDD loop, verification commands, review gate, no-merge rule.
 ## Output format
 
 Present the plan as a single document with sections 1-9. Do NOT start implementation.
-After writing or updating the plan file, run `plan-view <plan-path>` if the
+After writing or updating the plan file, run `markdown-view <plan-path>` if the
 command exists. This opens the markdown in a readable terminal viewer; inside
-Zellij it appears in a floating pane. If `plan-view` is missing, continue with
+Zellij it appears in a floating pane. If `markdown-view` is missing, continue with
 the normal text summary.
 
 ## Plan file location (single source of truth)

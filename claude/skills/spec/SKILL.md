@@ -181,7 +181,7 @@ Update the status at the top of the file to `Status: REVIEW`.
 
 **Goal:** Show the approved plan to the user.
 
-1. Run `plan-view <plan-path>` if the command exists. This opens the approved
+1. Run `markdown-view <plan-path>` if the command exists. This opens the approved
    markdown plan in a readable terminal viewer; inside Zellij it appears in a
    floating pane.
 2. Present a summary:

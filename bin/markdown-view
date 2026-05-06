@@ -1,19 +1,25 @@
 #!/usr/bin/env bash
-# Open a markdown plan in a readable terminal viewer.
+# Open any markdown file in a readable terminal viewer.
 # Inside Zellij: vertical split on the right by default; pass
-#   PLAN_VIEW_PANE=floating to use a centered floating pane instead.
+#   MARKDOWN_VIEW_PANE=floating to use a centered floating pane instead.
 # Outside Zellij: runs inline.
+#
+# Picks the best available viewer in order:
+#   frogmouth-tuned (if frogmouth installed) → glow → less
+#
+# Use this for plans (docs/plans/*.md), SKILL.md files, READMEs,
+# generated docs — anything markdown.
 
 set -euo pipefail
 
 usage() {
-  echo "usage: plan-view <plan.md>" >&2
+  echo "usage: markdown-view <file.md>" >&2
 }
 
 [ "${1:-}" != "" ] || { usage; exit 2; }
 
-PLAN_PATH="$1"
-[ -f "$PLAN_PATH" ] || { echo "ERROR: plan file not found: $PLAN_PATH" >&2; exit 1; }
+MD_PATH="$1"
+[ -f "$MD_PATH" ] || { echo "ERROR: markdown file not found: $MD_PATH" >&2; exit 1; }
 
 has_frogmouth() {
   local python="${FROGMOUTH_PYTHON:-}"
@@ -29,17 +35,19 @@ has_frogmouth() {
 }
 
 if command -v frogmouth-tuned >/dev/null 2>&1 && has_frogmouth; then
-  VIEWER=(frogmouth-tuned "$PLAN_PATH")
+  VIEWER=(frogmouth-tuned "$MD_PATH")
 elif command -v glow >/dev/null 2>&1; then
-  VIEWER=(glow -p "$PLAN_PATH")
+  VIEWER=(glow -p "$MD_PATH")
 else
-  VIEWER=(less -R "$PLAN_PATH")
+  VIEWER=(less -R "$MD_PATH")
 fi
 
 if [ -n "${ZELLIJ:-}" ] && command -v zellij >/dev/null 2>&1; then
-  PANE_MODE="${PLAN_VIEW_PANE:-right}"
-  PANE_NAME="plan: $(basename "$PLAN_PATH")"
-  PANE_CWD="$(dirname "$PLAN_PATH")"
+  # MARKDOWN_VIEW_PANE is the new env name; PLAN_VIEW_PANE is kept for
+  # backward compatibility with shell exports / aliases users may have.
+  PANE_MODE="${MARKDOWN_VIEW_PANE:-${PLAN_VIEW_PANE:-right}}"
+  PANE_NAME="md: $(basename "$MD_PATH")"
+  PANE_CWD="$(dirname "$MD_PATH")"
 
   case "$PANE_MODE" in
     right|down)
@@ -51,7 +59,7 @@ if [ -n "${ZELLIJ:-}" ] && command -v zellij >/dev/null 2>&1; then
         --name "$PANE_NAME" --cwd "$PANE_CWD" -- "${VIEWER[@]}"
       ;;
     *)
-      echo "plan-view: unknown PLAN_VIEW_PANE=$PANE_MODE (expected right|down|floating)" >&2
+      echo "markdown-view: unknown MARKDOWN_VIEW_PANE=$PANE_MODE (expected right|down|floating)" >&2
       exit 2
       ;;
   esac

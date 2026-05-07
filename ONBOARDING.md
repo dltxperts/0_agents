@@ -9,6 +9,7 @@ Single source of truth for setting up an agent host (Mac client or Linux server)
 | **Fresh Mac client** | `bash ~/Coding/0_agents/setup-mac.sh` |
 | **Bare Linux server** (no Cyrus) | `bash ~/Coding/0_agents/setup-server.sh` |
 | **Linux server hosting Cyrus** | `bash setup-server.sh && bash setup-cyrus.sh` |
+| **Create new agent user** (as root) | `sudo bash ~/Coding/0_agents/create-agent-user.sh <username>` |
 | **Existing host — just sync latest** | `bash ~/Coding/0_agents/update.sh` |
 
 All scripts are **idempotent**: re-runs detect what's already in place and only update what's missing or out of date. Running `update.sh` weekly is the maintenance cadence.
@@ -61,6 +62,67 @@ sudo adduser vibe
 sudo loginctl enable-linger vibe        # systemd --user persists at logout
 sudo -iu vibe                           # become the user, then proceed
 ```
+
+### Setting up multiple agent users for parallel work
+
+When you need multiple independent agent users working in parallel (e.g., for different projects or workstreams), use the helper script (recommended) or create users manually.
+
+**Option A: Using the helper script (recommended):**
+
+```bash
+# As root, run the script for each user
+cd ~/Coding/0_agents
+sudo bash create-agent-user.sh <username1>
+sudo bash create-agent-user.sh <username2>
+```
+
+The script creates the user, enables systemd linger, and prints next steps.
+
+**Option B: Manual creation:**
+
+```bash
+# As root, create each user
+sudo adduser <username1>
+sudo adduser <username2>
+
+# Enable systemd --user services to persist after logout
+sudo loginctl enable-linger <username1>
+sudo loginctl enable-linger <username2>
+
+# Optional: Add to sudo group if needed (only if the user needs elevated privileges)
+# sudo usermod -aG sudo <username1>
+# sudo usermod -aG sudo <username2>
+```
+
+Then, for **each user**, become that user and run the full setup:
+
+```bash
+# Setup for first user
+sudo -iu <username1>
+ssh-keygen -t ed25519 -C "<username1>@$(hostname)"
+# → Add the pubkey to https://github.com/settings/keys
+git clone git@github.com:dltxperts/0_agents.git ~/Coding/0_agents
+bash ~/Coding/0_agents/setup-server.sh
+# Optionally: bash ~/Coding/0_agents/setup-cyrus.sh
+exit
+
+# Repeat for other users
+sudo -iu <username2>
+ssh-keygen -t ed25519 -C "<username2>@$(hostname)"
+# → Add the pubkey to https://github.com/settings/keys
+git clone git@github.com:dltxperts/0_agents.git ~/Coding/0_agents
+bash ~/Coding/0_agents/setup-server.sh
+# Optionally: bash ~/Coding/0_agents/setup-cyrus.sh
+exit
+```
+
+Each user will have:
+- Independent `~/.claude/` and `~/.codex/` configurations
+- Isolated worktrees (if running Cyrus)
+- Separate systemd --user services
+- Own Linear OAuth tokens and credentials
+
+This allows multiple agent sessions to run in parallel without conflicts.
 
 ---
 

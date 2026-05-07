@@ -49,6 +49,19 @@ if [ -n "${ZELLIJ:-}" ] && command -v zellij >/dev/null 2>&1; then
   PANE_NAME="md: $(basename "$MD_PATH")"
   PANE_CWD="$(dirname "$MD_PATH")"
 
+  # Anchor the new pane to the CALLER's tab, not whichever tab happens to
+  # be focused right now. Without this, an agent running in tab A that
+  # opens markdown-view while the operator is looking at tab B will see
+  # its preview pane appear in tab B — confusing. By focusing the
+  # caller's pane first, we force `new-pane` to land in the right tab.
+  #
+  # $ZELLIJ_PANE_ID is set by Zellij for every process running in a pane.
+  # If it's missing (rare — non-pane child somehow), skip the anchor
+  # step and let new-pane fall back to whatever's focused.
+  if [ -n "${ZELLIJ_PANE_ID:-}" ]; then
+    zellij action focus-pane-id "$ZELLIJ_PANE_ID" 2>/dev/null || true
+  fi
+
   case "$PANE_MODE" in
     right|down)
       zellij action new-pane -d "$PANE_MODE" \

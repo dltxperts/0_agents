@@ -62,20 +62,35 @@ if [ -n "${ZELLIJ:-}" ] && command -v zellij >/dev/null 2>&1; then
     zellij action focus-pane-id "$ZELLIJ_PANE_ID" 2>/dev/null || true
   fi
 
+  # Capture the new pane's ID so we can explicitly re-focus it after
+  # creation. This is a workaround for a Zellij quirk: after a
+  # cross-tab focus-pane-id (above), the operator's client view
+  # sometimes loses mouse-mode capture in the new tab — clicks no
+  # longer register on panes until the operator manually clicks once.
+  # Re-focusing the just-created pane via command-line action seems
+  # to nudge Zellij into re-sending the mouse-init escape sequences.
   case "$PANE_MODE" in
     right|down)
-      zellij action new-pane -d "$PANE_MODE" \
-        --name "$PANE_NAME" --cwd "$PANE_CWD" -- "${VIEWER[@]}"
+      new_pane_out="$(zellij action new-pane -d "$PANE_MODE" \
+        --name "$PANE_NAME" --cwd "$PANE_CWD" -- "${VIEWER[@]}" 2>&1)"
       ;;
     floating)
-      zellij action new-pane --floating --width 90% --height 90% \
-        --name "$PANE_NAME" --cwd "$PANE_CWD" -- "${VIEWER[@]}"
+      new_pane_out="$(zellij action new-pane --floating --width 90% --height 90% \
+        --name "$PANE_NAME" --cwd "$PANE_CWD" -- "${VIEWER[@]}" 2>&1)"
       ;;
     *)
       echo "markdown-view: unknown MARKDOWN_VIEW_PANE=$PANE_MODE (expected right|down|floating)" >&2
       exit 2
       ;;
   esac
+  printf '%s\n' "$new_pane_out"
+  new_pane_id="$(printf '%s' "$new_pane_out" | grep -oE 'terminal_[0-9]+' | head -1)"
+  if [ -n "$new_pane_id" ]; then
+    # Brief delay lets the new pane's terminal init complete before
+    # we nudge it; otherwise the focus action may race the spawn.
+    sleep 0.15
+    zellij action focus-pane-id "$new_pane_id" 2>/dev/null || true
+  fi
 else
   exec "${VIEWER[@]}"
 fi

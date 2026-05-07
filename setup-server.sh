@@ -16,8 +16,9 @@
 #   7. install-runtimes.sh  (claude-code + codex npm CLIs)
 #   8. install-linear-mcp.sh (Linear MCP register; OAuth login deferred)
 #   9. install-lazyvim.sh   (LazyVim — useful on Ubuntu where apt nvim is old)
-#  10. Subscription logins (interactive: claude /login, codex login)
-#  11. Zellij session label
+#  10. zsh + oh-my-zsh + ~/.zshrc PATH (chsh to zsh)
+#  11. Subscription logins (interactive: claude /login, codex login --device-auth)
+#  12. Zellij session label
 #
 # Does NOT do:
 #   - Cyrus bootstrap (use setup-cyrus.sh AFTER this)
@@ -162,11 +163,88 @@ else
   warn "skipping LazyVim install (--no-lazyvim or install-lazyvim.sh missing)"
 fi
 
-# ─── 10. Subscription logins (interactive) ──────────────────────────────────
+# ─── 10. zsh + oh-my-zsh ────────────────────────────────────────────────────
+# Install zsh, oh-my-zsh, set zsh as the user's login shell, and seed ~/.zshrc
+# with the PATH lines we need (nvm, bun, ~/.local/bin) — without those, codex
+# and claude are not on PATH after the user re-logs into a zsh session.
+# Needs sudo (system package + chsh + /etc/shells edit). You may be prompted.
+say "zsh + oh-my-zsh"
+command -v sudo >/dev/null || err "sudo is required for zsh install (system package + chsh)"
+
+install_zsh_pkg() {
+  if command -v zsh >/dev/null 2>&1; then
+    ok "zsh already installed ($(zsh --version | head -1))"
+    return
+  fi
+  if command -v apt-get >/dev/null 2>&1; then
+    sudo apt-get update -y >/dev/null
+    sudo apt-get install -y zsh
+  elif command -v dnf >/dev/null 2>&1; then
+    sudo dnf install -y zsh
+  elif command -v yum >/dev/null 2>&1; then
+    sudo yum install -y zsh
+  elif command -v pacman >/dev/null 2>&1; then
+    sudo pacman -S --noconfirm zsh
+  else
+    err "no supported package manager (apt/dnf/yum/pacman) — install zsh manually and rerun"
+  fi
+  ok "zsh installed ($(zsh --version | head -1))"
+}
+install_zsh_pkg
+
+# oh-my-zsh — unattended so it doesn't chsh or exec zsh on us
+if [[ -d "$HOME/.oh-my-zsh" ]]; then
+  ok "oh-my-zsh already present ($HOME/.oh-my-zsh)"
+else
+  RUNZSH=no CHSH=no \
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+  ok "oh-my-zsh installed"
+fi
+
+# Seed ~/.zshrc with our PATH block (idempotent via marker).
+# oh-my-zsh writes a default ~/.zshrc; we append after it.
+ZSHRC="$HOME/.zshrc"
+ZSHRC_MARKER="# >>> 0_agents zsh PATH (managed) >>>"
+if [[ -f "$ZSHRC" ]] && grep -qF "$ZSHRC_MARKER" "$ZSHRC"; then
+  ok "~/.zshrc PATH block already present"
+else
+  cat >> "$ZSHRC" <<'EOF'
+
+# >>> 0_agents zsh PATH (managed) >>>
+# Bring nvm-installed node + globals (claude, codex), bun, and ~/.local/bin
+# onto PATH so they work in zsh sessions just like bash.
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$HOME/.local/bin:$BUN_INSTALL/bin:$PATH"
+# <<< 0_agents zsh PATH (managed) <<<
+EOF
+  ok "appended PATH block to $ZSHRC"
+fi
+
+# chsh to zsh (only if the user's login shell isn't already zsh)
+ZSH_BIN="$(command -v zsh)"
+CURRENT_SHELL="$(getent passwd "$(whoami)" 2>/dev/null | cut -d: -f7)"
+if [[ "$CURRENT_SHELL" == "$ZSH_BIN" ]]; then
+  ok "login shell already zsh"
+else
+  # /etc/shells must list the zsh binary or chsh refuses.
+  if ! grep -qxF "$ZSH_BIN" /etc/shells 2>/dev/null; then
+    echo "$ZSH_BIN" | sudo tee -a /etc/shells >/dev/null
+  fi
+  if sudo chsh -s "$ZSH_BIN" "$(whoami)"; then
+    ok "login shell changed to $ZSH_BIN (effective on next login)"
+  else
+    warn "chsh failed — change manually: sudo chsh -s $ZSH_BIN $(whoami)"
+  fi
+fi
+
+# ─── 11. Subscription logins (interactive) ──────────────────────────────────
 if [[ "$DO_LOGINS" -eq 0 ]]; then
   warn "skipping subscription logins (--no-logins). Run manually:"
   echo "    claude         # then /login"
-  echo "    codex login"
+  echo "    codex login --device-auth"
 else
   say "Claude Code subscription login"
   if [[ -f "$HOME/.claude/.credentials.json" ]]; then
@@ -181,12 +259,15 @@ else
   if [[ -f "$HOME/.codex/auth.json" ]]; then
     ok "codex already authenticated ($HOME/.codex/auth.json present)"
   else
-    codex login \
-      || warn "codex login exited non-zero — retry with 'codex login'"
+    # --device-auth: prints a code + URL to open on any device.
+    # The default flow opens a localhost callback, which is broken on headless
+    # boxes and behind SSH without a tunnel.
+    codex login --device-auth \
+      || warn "codex login exited non-zero — retry with 'codex login --device-auth'"
   fi
 fi
 
-# ─── 11. Zellij session label ──────────────────────────────────────────────
+# ─── 12. Zellij session label ──────────────────────────────────────────────
 if command -v agent-session-name >/dev/null 2>&1; then
   say "Naming terminal session"
   agent-session-name "${AGENT_SESSION_NAME:-$(whoami)}" || true

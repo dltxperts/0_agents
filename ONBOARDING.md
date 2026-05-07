@@ -143,7 +143,7 @@ bash ~/Coding/0_agents/setup-mac.sh
 5. **install-linear-mcp.sh** — register Linear MCP for both Codex and Claude
 6. **install-lazyvim.sh** — Neovim ≥ 0.11 (via brew) + LazyVim starter at `~/.config/nvim`
 7. **macos_hotkey.sh** — Hammerspoon + Cmd-Shift-3 → `screenshot-upload.sh` → u3775
-8. **Subscription logins** — `claude setup-token`, `codex login` (interactive)
+8. **Subscription logins** — `claude setup-token`, `codex login` (interactive; on Mac the default browser flow works)
 
 After it finishes, do these manually:
 - `brew install --cask tailscale` then log in to Tailscale
@@ -171,8 +171,9 @@ bash ~/Coding/0_agents/setup-server.sh
 8. **install-runtimes.sh**
 9. **install-linear-mcp.sh**
 10. **install-lazyvim.sh** (avoids old Ubuntu apt nvim — fetches GitHub stable tarball into `~/.local/share/nvim-prebuilt/` and symlinks `~/.local/bin/nvim`)
-11. Subscription logins (interactive)
-12. Zellij session label
+11. **zsh + oh-my-zsh** — installs zsh, oh-my-zsh (unattended), seeds `~/.zshrc` with the nvm/bun/`~/.local/bin` PATH block, `chsh` to zsh
+12. Subscription logins (interactive — `claude setup-token`, `codex login --device-auth`)
+13. Zellij session label
 
 ### C. Linux server hosting Cyrus
 

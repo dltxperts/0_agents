@@ -7,18 +7,19 @@
 #
 # What this installs (in order):
 #   0. Sanity checks (running as user, basic tools present)
-#   1. Node (via nvm)
-#   2. Bun
-#   3. cloudflared (system tool — Cyrus, dev tunnels, anything else)
-#   4. install.sh --server  (claude+codex symlinks + wide-permission settings)
-#   5. install-bin.sh       (~/.local/bin/markdown-view, frogmouth-tuned, ...)
-#   6. install-codex-config.sh     (Codex config.toml render)
-#   7. install-runtimes.sh  (claude-code + codex npm CLIs)
-#   8. install-linear-mcp.sh (Linear MCP register; OAuth login deferred)
-#   9. install-lazyvim.sh   (LazyVim — useful on Ubuntu where apt nvim is old)
-#  10. zsh + oh-my-zsh + ~/.zshrc PATH (chsh to zsh)
-#  11. Subscription logins (interactive: claude /login, codex login --device-auth)
-#  12. Zellij session label
+#   1. GitHub CLI (gh) + gh auth login + gh auth setup-git
+#   2. Node (via nvm)
+#   3. Bun
+#   4. cloudflared (system tool — Cyrus, dev tunnels, anything else)
+#   5. install.sh --server  (claude+codex symlinks + wide-permission settings)
+#   6. install-bin.sh       (~/.local/bin/markdown-view, frogmouth-tuned, ...)
+#   7. install-codex-config.sh     (Codex config.toml render)
+#   8. install-runtimes.sh  (claude-code + codex npm CLIs)
+#   9. install-linear-mcp.sh (Linear MCP register; OAuth login deferred)
+#  10. install-lazyvim.sh   (LazyVim — useful on Ubuntu where apt nvim is old)
+#  11. zsh + oh-my-zsh + ~/.zshrc PATH (chsh to zsh)
+#  12. Subscription logins (interactive: claude /login, codex login --device-auth)
+#  13. Zellij session label
 #
 # Does NOT do:
 #   - Cyrus bootstrap (use setup-cyrus.sh AFTER this)
@@ -69,14 +70,56 @@ err()   { printf "\n\033[1;31m✗ %s\033[0m\n" "$*" >&2; exit 1; }
 # ─── 0. Sanity ──────────────────────────────────────────────────────────────
 say "Sanity checks"
 [[ "$(id -u)" -ne 0 ]] || err "Do NOT run as root. Switch to your agent user (e.g. 'sudo -iu vibe') and rerun."
-for c in bash curl git ssh; do
+for c in bash curl git ssh sudo; do
   command -v "$c" >/dev/null || err "$c is missing. Install via your package manager and rerun."
 done
 ok "running as $(whoami) on $(uname -s) $(uname -m)"
 
 [[ "$(uname -s)" == "Linux" ]] || warn "This script is targeted at Linux. macOS has its own setup-mac.sh."
 
-# ─── 1. Node via nvm ────────────────────────────────────────────────────────
+# ─── 1. GitHub CLI (gh) + git credential helper ─────────────────────────────
+# Install gh, log in (first run is interactive — paste token or use device
+# flow), then `gh auth setup-git` so subsequent `git push` over HTTPS uses the
+# same token without prompting. Without this, fresh boxes can't push to
+# github.com non-interactively.
+say "GitHub CLI (gh)"
+if ! command -v gh >/dev/null 2>&1; then
+  if command -v apt-get >/dev/null 2>&1; then
+    if ! sudo apt-get install -y gh >/dev/null 2>&1; then
+      # Some Ubuntus don't ship gh — add GitHub's apt repo and retry.
+      sudo mkdir -p -m 755 /etc/apt/keyrings
+      curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+        | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null
+      sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+      echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+        | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
+      sudo apt-get update -y >/dev/null
+      sudo apt-get install -y gh
+    fi
+  elif command -v dnf >/dev/null 2>&1; then
+    sudo dnf install -y gh
+  elif command -v yum >/dev/null 2>&1; then
+    sudo yum install -y gh
+  elif command -v pacman >/dev/null 2>&1; then
+    sudo pacman -S --noconfirm github-cli
+  else
+    err "no supported package manager (apt/dnf/yum/pacman) — install gh manually and rerun"
+  fi
+fi
+ok "gh $(gh --version 2>/dev/null | head -1 | awk '{print $3}')"
+
+if gh auth status >/dev/null 2>&1; then
+  ok "gh already authenticated"
+else
+  say "gh auth login (first run — paste a token or use the device-flow code)"
+  gh auth login || warn "gh auth login did not complete; rerun later: gh auth login"
+fi
+
+# Wire git's HTTPS credential helper to gh for github.com.
+gh auth setup-git
+ok "git HTTPS auth wired to gh"
+
+# ─── 2. Node via nvm ────────────────────────────────────────────────────────
 say "Node $NODE_VERSION (via nvm)"
 if [[ ! -s "$HOME/.nvm/nvm.sh" ]]; then
   curl -fsSL "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh" | bash
@@ -93,7 +136,7 @@ fi
 nvm use default >/dev/null
 ok "node $(node --version), npm $(npm --version)"
 
-# ─── 2. Bun ─────────────────────────────────────────────────────────────────
+# ─── 3. Bun ─────────────────────────────────────────────────────────────────
 say "Bun"
 if [[ ! -x "$HOME/.bun/bin/bun" ]]; then
   curl -fsSL https://bun.sh/install | bash
@@ -102,7 +145,7 @@ export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 ok "bun $(bun --version)"
 
-# ─── 3. cloudflared ─────────────────────────────────────────────────────────
+# ─── 4. cloudflared ─────────────────────────────────────────────────────────
 say "cloudflared"
 if ! command -v cloudflared >/dev/null; then
   case "$(uname -m)" in
@@ -119,7 +162,7 @@ fi
 export PATH="$HOME/.local/bin:$PATH"
 ok "cloudflared $(cloudflared --version 2>&1 | head -1)"
 
-# ─── 4. Repo-managed agent config (server mode) ─────────────────────────────
+# ─── 5. Repo-managed agent config (server mode) ─────────────────────────────
 if [[ -x "$REPO_DIR/install.sh" ]]; then
   say "Installing agent config from $REPO_DIR (server mode)"
   bash "$REPO_DIR/install.sh" --server
@@ -127,19 +170,19 @@ else
   err "install.sh not found alongside this script — abort"
 fi
 
-# ─── 5. ~/.local/bin helpers (markdown-view, frogmouth-tuned, ...) ──────────
+# ─── 6. ~/.local/bin helpers (markdown-view, frogmouth-tuned, ...) ──────────
 if [[ -x "$REPO_DIR/install-bin.sh" ]]; then
   say "Installing ~/.local/bin helpers"
   bash "$REPO_DIR/install-bin.sh"
 fi
 
-# ─── 6. Codex config.toml render ────────────────────────────────────────────
+# ─── 7. Codex config.toml render ────────────────────────────────────────────
 if [[ -x "$REPO_DIR/install-codex-config.sh" ]]; then
   say "Rendering Codex config.toml"
   bash "$REPO_DIR/install-codex-config.sh"
 fi
 
-# ─── 7. Runtimes (claude-code + codex npm CLIs) ─────────────────────────────
+# ─── 8. Runtimes (claude-code + codex npm CLIs) ─────────────────────────────
 if [[ "$DO_RUNTIMES" -eq 1 && -x "$REPO_DIR/install-runtimes.sh" ]]; then
   say "Installing agent runtimes"
   bash "$REPO_DIR/install-runtimes.sh"
@@ -147,7 +190,7 @@ else
   warn "skipping runtimes install (--no-runtimes or install-runtimes.sh missing)"
 fi
 
-# ─── 8. Linear MCP register ─────────────────────────────────────────────────
+# ─── 9. Linear MCP register ─────────────────────────────────────────────────
 if [[ -x "$REPO_DIR/install-linear-mcp.sh" ]]; then
   say "Registering Linear MCP"
   # OAuth login is interactive and requires a browser — print instructions
@@ -155,7 +198,7 @@ if [[ -x "$REPO_DIR/install-linear-mcp.sh" ]]; then
   bash "$REPO_DIR/install-linear-mcp.sh" || warn "install-linear-mcp.sh exited non-zero (continuing)"
 fi
 
-# ─── 9. LazyVim ─────────────────────────────────────────────────────────────
+# ─── 10. LazyVim ────────────────────────────────────────────────────────────
 if [[ "$DO_LAZYVIM" -eq 1 && -x "$REPO_DIR/install-lazyvim.sh" ]]; then
   say "Installing LazyVim"
   bash "$REPO_DIR/install-lazyvim.sh"
@@ -163,7 +206,7 @@ else
   warn "skipping LazyVim install (--no-lazyvim or install-lazyvim.sh missing)"
 fi
 
-# ─── 10. zsh + oh-my-zsh ────────────────────────────────────────────────────
+# ─── 11. zsh + oh-my-zsh ────────────────────────────────────────────────────
 # Install zsh, oh-my-zsh, set zsh as the user's login shell, and seed ~/.zshrc
 # with the PATH lines we need (nvm, bun, ~/.local/bin) — without those, codex
 # and claude are not on PATH after the user re-logs into a zsh session.
@@ -240,7 +283,7 @@ else
   fi
 fi
 
-# ─── 11. Subscription logins (interactive) ──────────────────────────────────
+# ─── 12. Subscription logins (interactive) ──────────────────────────────────
 if [[ "$DO_LOGINS" -eq 0 ]]; then
   warn "skipping subscription logins (--no-logins). Run manually:"
   echo "    claude         # then /login"
@@ -267,7 +310,7 @@ else
   fi
 fi
 
-# ─── 12. Zellij session label ──────────────────────────────────────────────
+# ─── 13. Zellij session label ──────────────────────────────────────────────
 if command -v agent-session-name >/dev/null 2>&1; then
   say "Naming terminal session"
   agent-session-name "${AGENT_SESSION_NAME:-$(whoami)}" || true

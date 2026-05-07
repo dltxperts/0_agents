@@ -161,19 +161,20 @@ bash ~/Coding/0_agents/setup-server.sh
 ```
 
 `setup-server.sh` does, in order:
-1. Sanity (must run as user, not root; bash/curl/git/ssh present)
-2. **Node** via nvm
-3. **Bun**
-4. **cloudflared** (system tool — useful regardless of Cyrus)
-5. **install.sh --server** (claude+codex symlinks **+** server-side wide-permission `settings.json`)
-6. **install-bin.sh**
-7. **install-codex-config.sh**
-8. **install-runtimes.sh**
-9. **install-linear-mcp.sh**
-10. **install-lazyvim.sh** (avoids old Ubuntu apt nvim — fetches GitHub stable tarball into `~/.local/share/nvim-prebuilt/` and symlinks `~/.local/bin/nvim`)
-11. **zsh + oh-my-zsh** — installs zsh, oh-my-zsh (unattended), seeds `~/.zshrc` with the nvm/bun/`~/.local/bin` PATH block, `chsh` to zsh
-12. Subscription logins (interactive — `claude setup-token`, `codex login --device-auth`)
-13. Zellij session label
+1. Sanity (must run as user, not root; bash/curl/git/ssh/sudo present)
+2. **GitHub CLI** — install `gh`, `gh auth login` (first run is interactive — paste a token or use the device-flow code), then `gh auth setup-git` so `git push` over HTTPS uses the gh token
+3. **Node** via nvm
+4. **Bun**
+5. **cloudflared** (system tool — useful regardless of Cyrus)
+6. **install.sh --server** (claude+codex symlinks **+** server-side wide-permission `settings.json`)
+7. **install-bin.sh**
+8. **install-codex-config.sh**
+9. **install-runtimes.sh**
+10. **install-linear-mcp.sh**
+11. **install-lazyvim.sh** (avoids old Ubuntu apt nvim — fetches GitHub stable tarball into `~/.local/share/nvim-prebuilt/` and symlinks `~/.local/bin/nvim`)
+12. **zsh + oh-my-zsh** — installs zsh, oh-my-zsh (unattended), seeds `~/.zshrc` with the nvm/bun/`~/.local/bin` PATH block, `chsh` to zsh
+13. Subscription logins (interactive — `claude setup-token`, `codex login --device-auth`)
+14. Zellij session label
 
 ### C. Linux server hosting Cyrus
 

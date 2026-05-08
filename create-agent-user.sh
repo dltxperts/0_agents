@@ -60,6 +60,14 @@ ok "user $USERNAME created"
 loginctl enable-linger "$USERNAME"
 ok "systemd --user linger enabled (services will persist after logout)"
 
+# Add to screenshot group so this user can read /tmp/screenshots/* uploads
+if getent group screenshot >/dev/null; then
+  usermod -aG screenshot "$USERNAME"
+  ok "added to screenshot group (can read /tmp/screenshots/)"
+else
+  printf "  \033[1;33m⚠\033[0m screenshot group missing — skipping (run 'sudo groupadd screenshot' if you want this)\n"
+fi
+
 # Optional: uncomment if you want to add users to sudo group by default
 # usermod -aG sudo "$USERNAME"
 # ok "added to sudo group"

@@ -60,10 +60,11 @@ mdurl -r <slug>        # remove one of YOUR documents
 
 If `command -v mdurl` returns nothing, the package isn't installed on this host. Tell the user:
 
-> The mdurl package is missing on this machine. Install it once with:
+> The mdurl package is missing on this machine. Install it via the standard 0_agents update flow:
 > ```bash
-> sudo bash ~/Coding/0_agents/markdown-server/install.sh
+> bash ~/Coding/0_agents/update.sh --server
 > ```
+> (or `setup-server.sh` for a fresh host). It's a system-wide install — sudo will be requested.
 
 Don't try to install it yourself unless the user explicitly approves — it touches /usr/local/bin and creates a system user.
 

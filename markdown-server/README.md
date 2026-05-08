@@ -15,13 +15,20 @@ dark GitHub-style theme.
 | `install-skill.sh` | Per-user installer for the Claude Code skill |
 | `SKILL.md` | Claude Code skill that auto-invokes `mdurl` from any chat |
 
-## Install (once, as root)
+## Install
+
+The mdurl package is wired into the standard 0_agents installer chain. You
+do **not** invoke the scripts in this directory by hand.
+
+**Server-side (once, on the host that should serve mdurl):**
 
 ```bash
-sudo bash install.sh
+bash ~/Coding/0_agents/setup-server.sh        # initial bootstrap
+# OR for an existing host:
+bash ~/Coding/0_agents/update.sh --server     # idempotent re-apply
 ```
 
-This:
+The `--server` step calls `install-markdown-server.sh --server`, which:
 
 1. Creates the `mdview` system user (no shell, no home-dir login).
 2. Installs `python3-markdown` if missing.
@@ -33,16 +40,26 @@ This:
    `daemon-reload`, `enable --now`.
 6. Smoke-tests `http://127.0.0.1:6420/`.
 
-## Per-user (after the host is set up)
-
-Each user that wants the Claude Code skill:
+**Per-user skill (every user, idempotent):**
 
 ```bash
-bash ~/Coding/0_agents/markdown-server/install-skill.sh
+bash ~/Coding/0_agents/update.sh              # full update
+# or just the skill:
+bash ~/Coding/0_agents/install-markdown-server.sh
 ```
 
-This drops a symlink at `~/.claude/skills/mdurl/SKILL.md` so future repo
-updates propagate without re-running the script.
+That symlinks `SKILL.md` → `~/.claude/skills/mdurl/SKILL.md`, so future repo
+updates propagate without re-running anything.
+
+**Stand-alone scripts** (escape hatch, not the recommended path):
+
+| Script | Purpose |
+|--------|---------|
+| `markdown-server/install.sh` | Server-side, run as root |
+| `markdown-server/install-skill.sh` | Per-user skill symlink |
+
+These are invoked by the top-level wrappers above; you typically don't need
+to call them directly.
 
 ## Usage
 

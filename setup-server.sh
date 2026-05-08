@@ -15,11 +15,12 @@
 #   6. install-bin.sh       (~/.local/bin/markdown-view, frogmouth-tuned, ...)
 #   7. install-codex-config.sh     (Codex config.toml render)
 #   8. install-runtimes.sh  (claude-code + codex npm CLIs)
-#   9. install-linear-mcp.sh (Linear MCP register; OAuth login deferred)
-#  10. install-lazyvim.sh   (LazyVim — useful on Ubuntu where apt nvim is old)
-#  11. zsh + oh-my-zsh + ~/.zshrc PATH (chsh to zsh)
-#  12. Subscription logins (interactive: claude /login, codex login --device-auth)
-#  13. Zellij session label
+#   9. install-markdown-server.sh --server (mdurl daemon + per-user skill)
+#  10. install-linear-mcp.sh (Linear MCP register; OAuth login deferred)
+#  11. install-lazyvim.sh   (LazyVim — useful on Ubuntu where apt nvim is old)
+#  12. zsh + oh-my-zsh + ~/.zshrc PATH (chsh to zsh)
+#  13. Subscription logins (interactive: claude /login, codex login --device-auth)
+#  14. Zellij session label
 #
 # Does NOT do:
 #   - Cyrus bootstrap (use setup-cyrus.sh AFTER this)
@@ -190,7 +191,13 @@ else
   warn "skipping runtimes install (--no-runtimes or install-runtimes.sh missing)"
 fi
 
-# ─── 9. Linear MCP register ─────────────────────────────────────────────────
+# ─── 9. mdurl markdown-server (server-side daemon + per-user skill) ─────────
+if [[ -x "$REPO_DIR/install-markdown-server.sh" ]]; then
+  say "Installing mdurl markdown-server"
+  bash "$REPO_DIR/install-markdown-server.sh" --server
+fi
+
+# ─── 10. Linear MCP register ────────────────────────────────────────────────
 if [[ -x "$REPO_DIR/install-linear-mcp.sh" ]]; then
   say "Registering Linear MCP"
   # OAuth login is interactive and requires a browser — print instructions
@@ -198,7 +205,7 @@ if [[ -x "$REPO_DIR/install-linear-mcp.sh" ]]; then
   bash "$REPO_DIR/install-linear-mcp.sh" || warn "install-linear-mcp.sh exited non-zero (continuing)"
 fi
 
-# ─── 10. LazyVim ────────────────────────────────────────────────────────────
+# ─── 11. LazyVim ────────────────────────────────────────────────────────────
 if [[ "$DO_LAZYVIM" -eq 1 && -x "$REPO_DIR/install-lazyvim.sh" ]]; then
   say "Installing LazyVim"
   bash "$REPO_DIR/install-lazyvim.sh"
@@ -206,7 +213,7 @@ else
   warn "skipping LazyVim install (--no-lazyvim or install-lazyvim.sh missing)"
 fi
 
-# ─── 11. zsh + oh-my-zsh ────────────────────────────────────────────────────
+# ─── 12. zsh + oh-my-zsh ────────────────────────────────────────────────────
 # Install zsh, oh-my-zsh, set zsh as the user's login shell, and seed ~/.zshrc
 # with the PATH lines we need (nvm, bun, ~/.local/bin) — without those, codex
 # and claude are not on PATH after the user re-logs into a zsh session.
@@ -283,7 +290,7 @@ else
   fi
 fi
 
-# ─── 12. Subscription logins (interactive) ──────────────────────────────────
+# ─── 13. Subscription logins (interactive) ─────────────────────────────────
 if [[ "$DO_LOGINS" -eq 0 ]]; then
   warn "skipping subscription logins (--no-logins). Run manually:"
   echo "    claude auth login --claudeai"
@@ -319,7 +326,7 @@ else
   fi
 fi
 
-# ─── 13. Zellij session label ──────────────────────────────────────────────
+# ─── 14. Zellij session label ──────────────────────────────────────────────
 if command -v agent-session-name >/dev/null 2>&1; then
   say "Naming terminal session"
   agent-session-name "${AGENT_SESSION_NAME:-$(whoami)}" || true

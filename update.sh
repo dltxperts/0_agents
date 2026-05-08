@@ -9,8 +9,9 @@
 #   3. install-bin.sh              (~/.local/bin/markdown-view, ...)
 #   4. install-codex-config.sh            (codex/config.toml render)
 #   5. install-runtimes.sh         (claude-code + codex npm globals — upgrade)
-#   6. install-linear-mcp.sh       (Linear MCP register; OAuth login skipped)
-#   7. install-lazyvim.sh          (only if --with-lazyvim or detected nvim use)
+#   6. install-markdown-server.sh (mdurl skill always; +server-side on --server)
+#   7. install-linear-mcp.sh       (Linear MCP register; OAuth login skipped)
+#   8. install-lazyvim.sh          (only if --with-lazyvim or detected nvim use)
 #
 # Per-step failures DO stop the run (set -e). Intentional skips via flags.
 #
@@ -22,7 +23,7 @@
 #   update.sh --with-lazyvim      # also run install-lazyvim.sh
 #   update.sh --skip <name>       # skip a specific step (repeatable):
 #                                   git, install, bin, codex-config, runtimes,
-#                                   linear-mcp, lazyvim
+#                                   markdown-server, linear-mcp, lazyvim
 
 set -euo pipefail
 
@@ -118,7 +119,21 @@ else
   bash "$REPO_DIR/install-runtimes.sh"
 fi
 
-# ─── 6. install-linear-mcp.sh ────────────────────────────────────────────
+# ─── 6. install-markdown-server.sh ──────────────────────────────────────
+# Always installs the per-user mdurl Claude skill (symlink). On --server, also
+# installs the server-side mdurl daemon (sudo). Idempotent on re-runs.
+if should_skip markdown-server; then
+  ok "skipping install-markdown-server.sh"
+else
+  say "install-markdown-server.sh$([ $SERVER_MODE -eq 1 ] && echo ' --server')"
+  if [ "$SERVER_MODE" -eq 1 ]; then
+    bash "$REPO_DIR/install-markdown-server.sh" --server
+  else
+    bash "$REPO_DIR/install-markdown-server.sh"
+  fi
+fi
+
+# ─── 7. install-linear-mcp.sh ────────────────────────────────────────────
 if should_skip linear-mcp; then
   ok "skipping install-linear-mcp.sh"
 else
@@ -128,7 +143,7 @@ else
   bash "$REPO_DIR/install-linear-mcp.sh" || warn "install-linear-mcp.sh exited non-zero (continuing)"
 fi
 
-# ─── 7. install-lazyvim.sh (opt-in) ──────────────────────────────────────
+# ─── 8. install-lazyvim.sh (opt-in) ──────────────────────────────────────
 if should_skip lazyvim; then
   ok "skipping install-lazyvim.sh"
 elif [ "$DO_LAZYVIM" -eq 1 ]; then

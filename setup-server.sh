@@ -286,16 +286,25 @@ fi
 # ─── 12. Subscription logins (interactive) ──────────────────────────────────
 if [[ "$DO_LOGINS" -eq 0 ]]; then
   warn "skipping subscription logins (--no-logins). Run manually:"
-  echo "    claude         # then /login"
+  echo "    claude auth login --claudeai"
   echo "    codex login --device-auth"
 else
   say "Claude Code subscription login"
   if [[ -f "$HOME/.claude/.credentials.json" ]]; then
     ok "claude-code already authenticated ($HOME/.claude/.credentials.json present)"
   else
-    echo "  Running 'claude setup-token' — open the printed URL, sign in, paste back."
-    claude setup-token \
-      || warn "setup-token failed; finish manually: run 'claude' then '/login'"
+    # 'claude auth login' does OAuth and persists to ~/.claude/.credentials.json.
+    # 'claude setup-token' only PRINTS a token (the user has to set it as
+    # ANTHROPIC_API_KEY themselves) — that's why fresh boxes were re-prompting
+    # for login on every claude invocation when we used setup-token.
+    #
+    # The OAuth callback hits localhost:<port>. Over SSH from a Mac, open the
+    # tunnel first:    ssh -L 54545:localhost:54545 user@host
+    # (port is printed by claude during the flow; mirror it on -L).
+    echo "  Running 'claude auth login --claudeai' — open the printed URL,"
+    echo "  sign in. Over SSH you need 'ssh -L <port>:localhost:<port>' first."
+    claude auth login --claudeai \
+      || warn "claude auth login failed; retry: claude auth login --claudeai"
   fi
 
   say "Codex subscription login"
@@ -334,6 +343,8 @@ cat <<EOF
     ~/.local/bin/{markdown-view, frogmouth-tuned, agent-session-name, plan-view}
 
   Next steps:
+    - Re-login (or run 'exec zsh') so the new login shell takes effect.
+      The current session is still bash — chsh only applies on next login.
     - If this host is meant to run Cyrus: bash $REPO_DIR/setup-cyrus.sh
     - To re-apply latest 0_agents changes anytime: bash $REPO_DIR/update.sh
     - To edit code from terminal: nvim (LazyVim is configured)

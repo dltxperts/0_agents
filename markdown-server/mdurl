@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+# mdurl -- publish a markdown file to the local mdurl server.
+#
+# Usage:
+#   mdurl <path/to/file.md> [slug]   copy & publish, print URL
+#   mdurl -l                          list YOUR docs
+#   mdurl -L                          list ALL docs (every user)
+#   mdurl -r <slug>                   remove one of YOUR docs
+#   mdurl -h                          help
+#
+# Files are copied (not symlinked) into /srv/markdown/<your-username>/<slug>.md
+# so the mdview service user can read them without ACL/group plumbing.
+# Re-run mdurl after editing the source file to refresh the published copy.
+
+set -euo pipefail
+
+ROOT="${MDURL_ROOT:-/srv/markdown}"
+HOST="${MDURL_HOST:-u3775}"
+PORT="${MDURL_PORT:-6420}"
+
+ME="$(id -un)"
+USER_DIR="$ROOT/$ME"
+
+usage() {
+  sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'
+  exit "${1:-1}"
+}
+
+ensure_root() {
+  if [[ ! -d "$ROOT" ]]; then
+    cat >&2 <<EOF
+mdurl: server root '$ROOT' does not exist.
+Has the mdurl server been installed on this host?
+  sudo bash ~/Coding/0_agents/markdown-server/install.sh
+EOF
+    exit 2
+  fi
+}
+
+ensure_user_dir() {
+  if [[ ! -d "$USER_DIR" ]]; then
+    mkdir -p "$USER_DIR"
+    chmod 755 "$USER_DIR"
+  fi
+}
+
+sanitize_slug() {
+  # lowercase, keep [a-z0-9_-], collapse runs of '-', strip leading/trailing '-'
+  printf '%s' "$1" \
+    | tr '[:upper:]' '[:lower:]' \
+    | tr -c 'a-z0-9_-' '-' \
+    | sed -E 's/-+/-/g; s/^-//; s/-$//'
+}
+
+cmd="${1:-}"
+case "$cmd" in
+  ""|-h|--help)
+    usage 0
+    ;;
+
+  -l|--list)
+    ensure_root
+    if [[ -d "$USER_DIR" ]]; then
+      find "$USER_DIR" -maxdepth 1 -type f -name '*.md' -printf '%f\n' \
+        | sed 's/\.md$//' \
+        | sort
+    fi
+    ;;
+
+  -L|--list-all)
+    ensure_root
+    find "$ROOT" -mindepth 2 -maxdepth 2 -type f -name '*.md' 2>/dev/null \
+      | sed -e "s#^$ROOT/##" -e 's/\.md$//' \
+      | sort
+    ;;
+
+  -r|--remove)
+    ensure_root
+    [[ -n "${2:-}" ]] || { echo "mdurl: -r requires a slug" >&2; exit 1; }
+    target="$USER_DIR/$2.md"
+    if [[ -f "$target" ]]; then
+      rm -f -- "$target"
+      echo "removed: $ME/$2"
+    else
+      echo "mdurl: not found: $ME/$2" >&2
+      exit 1
+    fi
+    ;;
+
+  -*)
+    echo "mdurl: unknown option: $cmd" >&2
+    usage 1
+    ;;
+
+  *)
+    ensure_root
+    SRC="$1"
+    [[ -f "$SRC" ]] || { echo "mdurl: not a file: $SRC" >&2; exit 1; }
+    case "$SRC" in
+      *.md|*.markdown) ;;
+      *) echo "mdurl: not a markdown file (.md/.markdown): $SRC" >&2; exit 1 ;;
+    esac
+
+    raw_slug="${2:-$(basename "$SRC")}"
+    raw_slug="${raw_slug%.md}"
+    raw_slug="${raw_slug%.markdown}"
+    SLUG="$(sanitize_slug "$raw_slug")"
+    [[ -n "$SLUG" ]] || {
+      echo "mdurl: derived slug is empty; pass an explicit one as the 2nd argument" >&2
+      exit 1
+    }
+
+    ensure_user_dir
+    DEST="$USER_DIR/$SLUG.md"
+    cp -- "$SRC" "$DEST"
+    chmod 644 "$DEST"
+    echo "http://$HOST:$PORT/$ME/$SLUG"
+    ;;
+esac

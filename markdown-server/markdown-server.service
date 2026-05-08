@@ -1,0 +1,41 @@
+[Unit]
+Description=mdurl markdown rendering server (mermaid + dark theme)
+Documentation=https://github.com/dltxperts/0_agents/tree/main/markdown-server
+After=network.target
+
+[Service]
+Type=simple
+User=mdview
+Group=mdview
+ExecStart=/usr/local/bin/markdown-server
+Restart=on-failure
+RestartSec=5
+
+# config
+Environment=MARKDOWN_ROOT=/srv/markdown
+Environment=MARKDOWN_LISTEN_HOST=0.0.0.0
+Environment=MARKDOWN_PORT=6420
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONUNBUFFERED=1
+
+# hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+PrivateTmp=true
+PrivateDevices=true
+RestrictAddressFamilies=AF_INET AF_INET6
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+SystemCallArchitectures=native
+ReadOnlyPaths=/srv/markdown
+
+[Install]
+WantedBy=multi-user.target

@@ -9,7 +9,7 @@
 #   3. install-bin.sh              (~/.local/bin/markdown-view, ...)
 #   4. install-codex-config.sh            (codex/config.toml render)
 #   5. install-runtimes.sh         (claude-code + codex npm globals — upgrade)
-#   6. install-markdown-server.sh (per-user mdurl Claude skill; no sudo)
+#   6. mdurl skill              (per-user ~/.claude/skills/mdurl/ symlink)
 #   7. install-linear-mcp.sh       (Linear MCP register; OAuth login skipped)
 #   8. install-lazyvim.sh          (only if --with-lazyvim or detected nvim use)
 #
@@ -23,7 +23,7 @@
 #   update.sh --with-lazyvim      # also run install-lazyvim.sh
 #   update.sh --skip <name>       # skip a specific step (repeatable):
 #                                   git, install, bin, codex-config, runtimes,
-#                                   markdown-server, linear-mcp, lazyvim
+#                                   mdurl-skill, linear-mcp, lazyvim
 
 set -euo pipefail
 
@@ -119,14 +119,15 @@ else
   bash "$REPO_DIR/install-runtimes.sh"
 fi
 
-# ─── 6. install-markdown-server.sh ──────────────────────────────────────
-# Per-user mdurl Claude skill (symlink into ~/.claude/skills/mdurl/). No sudo,
-# no system changes. Server-side daemon install lives in setup-server.sh.
-if should_skip markdown-server; then
-  ok "skipping install-markdown-server.sh"
+# ─── 6. mdurl per-user Claude skill ─────────────────────────────────────
+# Symlinks markdown-server/SKILL.md into ~/.claude/skills/mdurl/SKILL.md
+# for the current user. No sudo, no system changes. The mdurl daemon itself
+# is installed separately by setup-mdurl.sh (one-time, root).
+if should_skip mdurl-skill; then
+  ok "skipping mdurl skill install"
 else
-  say "install-markdown-server.sh"
-  bash "$REPO_DIR/install-markdown-server.sh"
+  say "mdurl skill (per-user)"
+  bash "$REPO_DIR/markdown-server/install-skill.sh"
 fi
 
 # ─── 7. install-linear-mcp.sh ────────────────────────────────────────────

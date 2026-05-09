@@ -17,24 +17,21 @@ dark GitHub-style theme.
 
 ## Install
 
-The mdurl package is wired into the standard 0_agents installer chain. You
-do **not** invoke the scripts in this directory by hand.
+mdurl uses a two-stage install. System-level install is a separate one-shot
+script (`setup-mdurl.sh`); the per-user Claude skill is wired into the
+regular `update.sh` so every user picks it up on their next update.
 
-**Server-side (once, as the agent user with sudo on the host that should serve mdurl):**
+### 1. Server-side (once per host, as root)
 
 ```bash
-bash ~/Coding/0_agents/setup-server.sh        # initial bootstrap, idempotent
+sudo bash ~/Coding/0_agents/setup-mdurl.sh
 ```
 
-`setup-server.sh` is the only entry point that does system-level installs
-(creates the `mdview` user, drops binaries into `/usr/local/bin/`, enables the
-systemd unit). It's safe to re-run after `git pull` to refresh the daemon.
+`setup-mdurl.sh` is **independent** of `setup-server.sh` -- the regular
+server bootstrap does not install mdurl. This is intentional: mdurl is opt-in
+because it opens a network port and creates a system user.
 
-`update.sh` does **not** perform server-side installs — it only refreshes
-per-user state (configs, claude/codex symlinks, the mdurl skill). That keeps
-`update.sh` runnable without `sudo`.
-
-The bootstrap calls `install-markdown-server.sh --server`, which:
+What it does (delegating to `markdown-server/install.sh`):
 
 1. Creates the `mdview` system user (no shell, no home-dir login).
 2. Installs `python3-markdown` if missing.
@@ -46,26 +43,37 @@ The bootstrap calls `install-markdown-server.sh --server`, which:
    `daemon-reload`, `enable --now`.
 6. Smoke-tests `http://127.0.0.1:6420/`.
 
-**Per-user skill (every user, idempotent):**
+To uninstall:
 
 ```bash
-bash ~/Coding/0_agents/update.sh              # full update
-# or just the skill:
-bash ~/Coding/0_agents/install-markdown-server.sh
+sudo bash ~/Coding/0_agents/setup-mdurl.sh uninstall
 ```
 
-That symlinks `SKILL.md` → `~/.claude/skills/mdurl/SKILL.md`, so future repo
-updates propagate without re-running anything.
+### 2. Per-user skill (each user, via the regular update flow)
 
-**Stand-alone scripts** (escape hatch, not the recommended path):
+```bash
+bash ~/Coding/0_agents/update.sh
+```
 
-| Script | Purpose |
-|--------|---------|
-| `markdown-server/install.sh` | Server-side, run as root |
-| `markdown-server/install-skill.sh` | Per-user skill symlink |
+`update.sh` runs as the regular user (no sudo) and symlinks
+`markdown-server/SKILL.md` → `~/.claude/skills/mdurl/SKILL.md`. Re-running
+update.sh after a `git pull` doesn't need to do anything for mdurl: the
+symlink already points at the live file.
 
-These are invoked by the top-level wrappers above; you typically don't need
-to call them directly.
+To run only the skill installer (skipping everything else):
+
+```bash
+bash ~/Coding/0_agents/markdown-server/install-skill.sh
+```
+
+### Stand-alone scripts (escape hatch)
+
+| Script | Who invokes |
+|--------|-------------|
+| `markdown-server/install.sh` | called by `setup-mdurl.sh` |
+| `markdown-server/install-skill.sh` | called by `update.sh` |
+
+You typically don't run these directly.
 
 ## Usage
 

@@ -20,15 +20,21 @@ dark GitHub-style theme.
 The mdurl package is wired into the standard 0_agents installer chain. You
 do **not** invoke the scripts in this directory by hand.
 
-**Server-side (once, on the host that should serve mdurl):**
+**Server-side (once, as the agent user with sudo on the host that should serve mdurl):**
 
 ```bash
-bash ~/Coding/0_agents/setup-server.sh        # initial bootstrap
-# OR for an existing host:
-bash ~/Coding/0_agents/update.sh --server     # idempotent re-apply
+bash ~/Coding/0_agents/setup-server.sh        # initial bootstrap, idempotent
 ```
 
-The `--server` step calls `install-markdown-server.sh --server`, which:
+`setup-server.sh` is the only entry point that does system-level installs
+(creates the `mdview` user, drops binaries into `/usr/local/bin/`, enables the
+systemd unit). It's safe to re-run after `git pull` to refresh the daemon.
+
+`update.sh` does **not** perform server-side installs — it only refreshes
+per-user state (configs, claude/codex symlinks, the mdurl skill). That keeps
+`update.sh` runnable without `sudo`.
+
+The bootstrap calls `install-markdown-server.sh --server`, which:
 
 1. Creates the `mdview` system user (no shell, no home-dir login).
 2. Installs `python3-markdown` if missing.

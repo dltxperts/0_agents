@@ -60,11 +60,11 @@ mdurl -r <slug>        # remove one of YOUR documents
 
 If `command -v mdurl` returns nothing, the package isn't installed on this host. Tell the user:
 
-> The mdurl package is missing on this machine. Install it via the standard 0_agents update flow:
+> The mdurl package is missing on this machine. Install it via the standard 0_agents bootstrap:
 > ```bash
-> bash ~/Coding/0_agents/update.sh --server
+> bash ~/Coding/0_agents/setup-server.sh
 > ```
-> (or `setup-server.sh` for a fresh host). It's a system-wide install — sudo will be requested.
+> It's a system-wide install — sudo will be requested. (`update.sh` only refreshes per-user state, so it won't install the daemon.)
 
 Don't try to install it yourself unless the user explicitly approves — it touches /usr/local/bin and creates a system user.
 

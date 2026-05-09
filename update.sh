@@ -9,7 +9,7 @@
 #   3. install-bin.sh              (~/.local/bin/markdown-view, ...)
 #   4. install-codex-config.sh            (codex/config.toml render)
 #   5. install-runtimes.sh         (claude-code + codex npm globals — upgrade)
-#   6. install-markdown-server.sh (mdurl skill always; +server-side on --server)
+#   6. install-markdown-server.sh (per-user mdurl Claude skill; no sudo)
 #   7. install-linear-mcp.sh       (Linear MCP register; OAuth login skipped)
 #   8. install-lazyvim.sh          (only if --with-lazyvim or detected nvim use)
 #
@@ -120,17 +120,13 @@ else
 fi
 
 # ─── 6. install-markdown-server.sh ──────────────────────────────────────
-# Always installs the per-user mdurl Claude skill (symlink). On --server, also
-# installs the server-side mdurl daemon (sudo). Idempotent on re-runs.
+# Per-user mdurl Claude skill (symlink into ~/.claude/skills/mdurl/). No sudo,
+# no system changes. Server-side daemon install lives in setup-server.sh.
 if should_skip markdown-server; then
   ok "skipping install-markdown-server.sh"
 else
-  say "install-markdown-server.sh$([ $SERVER_MODE -eq 1 ] && echo ' --server')"
-  if [ "$SERVER_MODE" -eq 1 ]; then
-    bash "$REPO_DIR/install-markdown-server.sh" --server
-  else
-    bash "$REPO_DIR/install-markdown-server.sh"
-  fi
+  say "install-markdown-server.sh"
+  bash "$REPO_DIR/install-markdown-server.sh"
 fi
 
 # ─── 7. install-linear-mcp.sh ────────────────────────────────────────────

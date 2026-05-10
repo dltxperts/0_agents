@@ -145,6 +145,10 @@ done
 link_item "~/.codex/agents" "$CODEX_SRC/agents" "$CODEX_DST/agents"
 link_item "~/.codex/lang" "$SHARED_SRC/lang" "$CODEX_DST/lang"
 
+# Zellij config: defaults + Russian-layout mirror bindings (so shortcuts
+# like `Ctrl-P x` work even when the OS keyboard is left on Russian).
+link_item "~/.config/zellij/config.kdl" "$SHARED_SRC/zellij/config.kdl" "$HOME/.config/zellij/config.kdl"
+
 if [[ "$SERVER_MODE" -eq 1 ]]; then
   echo "  (server mode: linking wide-permission settings)"
   link_item "~/.claude/settings.json" "$SERVER_SRC/claude/settings.json" "$CLAUDE_DST/settings.json"
@@ -153,6 +157,10 @@ fi
 
 if [ -x "$REPO_DIR/install-bin.sh" ]; then
   bash "$REPO_DIR/install-bin.sh"
+fi
+
+if [ -x "$REPO_DIR/install-completions.sh" ]; then
+  bash "$REPO_DIR/install-completions.sh"
 fi
 
 # MCP: register codex (user scope) so any Claude Code session can call it

@@ -9,9 +9,10 @@
 #   3. install-bin.sh              (~/.local/bin/markdown-view, ...)
 #   4. install-codex-config.sh            (codex/config.toml render)
 #   5. install-runtimes.sh         (claude-code + codex npm globals — upgrade)
-#   6. mdurl skill              (per-user ~/.claude/skills/mdurl/ symlink)
+#   6. mdurl skill                 (per-user ~/.claude/skills/mdurl/ symlink)
 #   7. install-linear-mcp.sh       (Linear MCP register; OAuth login skipped)
 #   8. install-lazyvim.sh          (only if --with-lazyvim or detected nvim use)
+#   9. install-completions.sh      (zsh completions for zellij/gh/bun/codex/...)
 #
 # Per-step failures DO stop the run (set -e). Intentional skips via flags.
 #
@@ -23,7 +24,7 @@
 #   update.sh --with-lazyvim      # also run install-lazyvim.sh
 #   update.sh --skip <name>       # skip a specific step (repeatable):
 #                                   git, install, bin, codex-config, runtimes,
-#                                   mdurl-skill, linear-mcp, lazyvim
+#                                   mdurl-skill, linear-mcp, lazyvim, completions
 
 set -euo pipefail
 
@@ -152,6 +153,14 @@ elif [ -f "$HOME/.config/nvim/lua/config/lazy.lua" ]; then
   bash "$REPO_DIR/install-lazyvim.sh"
 else
   ok "skipping install-lazyvim.sh (no LazyVim detected; pass --with-lazyvim to install)"
+fi
+
+# ─── 9. install-completions.sh ───────────────────────────────────────────
+if should_skip completions; then
+  ok "skipping install-completions.sh"
+else
+  say "install-completions.sh"
+  bash "$REPO_DIR/install-completions.sh"
 fi
 
 cat <<EOF

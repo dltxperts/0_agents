@@ -18,8 +18,9 @@
 #   9. install-linear-mcp.sh (Linear MCP register; OAuth login deferred)
 #  10. install-lazyvim.sh   (LazyVim — useful on Ubuntu where apt nvim is old)
 #  11. zsh + oh-my-zsh + ~/.zshrc PATH (chsh to zsh)
-#  12. Subscription logins (interactive: claude /login, codex login --device-auth)
-#  13. Zellij session label
+#  12. install-completions.sh (zsh completions for zellij/gh/bun/codex/...)
+#  13. Subscription logins (interactive: claude /login, codex login --device-auth)
+#  14. Zellij session label
 #
 # Does NOT install:
 #   - mdurl markdown server (separate one-shot: sudo bash setup-mdurl.sh)
@@ -287,7 +288,13 @@ else
   fi
 fi
 
-# ─── 12. Subscription logins (interactive) ─────────────────────────────────
+# ─── 12. Zsh completions ────────────────────────────────────────────────────
+if [[ -x "$REPO_DIR/install-completions.sh" ]]; then
+  say "Installing zsh completions"
+  bash "$REPO_DIR/install-completions.sh"
+fi
+
+# ─── 13. Subscription logins (interactive) ─────────────────────────────────
 if [[ "$DO_LOGINS" -eq 0 ]]; then
   warn "skipping subscription logins (--no-logins). Run manually:"
   echo "    claude auth login --claudeai"
@@ -323,7 +330,7 @@ else
   fi
 fi
 
-# ─── 13. Zellij session label ──────────────────────────────────────────────
+# ─── 14. Zellij session label ──────────────────────────────────────────────
 if command -v agent-session-name >/dev/null 2>&1; then
   say "Naming terminal session"
   agent-session-name "${AGENT_SESSION_NAME:-$(whoami)}" || true
@@ -344,6 +351,7 @@ cat <<EOF
     ~/.claude/settings.json     (server-side wide-permission profile)
     ~/.codex/{skills/*, agents, lang}
     ~/.codex/config.toml        (server-side workspace-write profile)
+    ~/.config/zellij/config.kdl (defaults + Russian-layout mirror binds)
     ~/.local/bin/{markdown-view, frogmouth-tuned, agent-session-name, plan-view}
 
   Next steps:

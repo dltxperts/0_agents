@@ -14,8 +14,9 @@
 #   5. install-linear-mcp.sh (Linear MCP register)
 #   6. install-lazyvim.sh   (LazyVim — operator wants to learn nvim on Mac too)
 #   7. macos_hotkey.sh      (Hammerspoon + Cmd-Shift-3 screenshot upload)
-#   8. Subscription logins (interactive: claude /login, codex login)
-#   9. Manual hints (Tailscale, etc.)
+#   8. install-completions.sh (zsh completions for zellij/gh/bun/codex/...)
+#   9. Subscription logins (interactive: claude /login, codex login)
+#  10. Manual hints (Tailscale, etc.)
 #
 # Does NOT do:
 #   - Homebrew install (you do that yourself: https://brew.sh)
@@ -117,7 +118,13 @@ else
   warn "skipping screenshot hotkey (--no-hotkey)"
 fi
 
-# ─── 8. Subscription logins ─────────────────────────────────────────────────
+# ─── 8. install-completions.sh (zsh completions) ────────────────────────────
+if [[ -x "$REPO_DIR/install-completions.sh" ]]; then
+  say "Installing zsh completions"
+  bash "$REPO_DIR/install-completions.sh"
+fi
+
+# ─── 9. Subscription logins ─────────────────────────────────────────────────
 if [[ "$DO_LOGINS" -eq 0 ]]; then
   warn "skipping subscription logins (--no-logins). Run manually:"
   echo "    claude         # then /login"
@@ -141,7 +148,7 @@ else
   fi
 fi
 
-# ─── 9. Manual hints ────────────────────────────────────────────────────────
+# ─── 10. Manual hints ───────────────────────────────────────────────────────
 say "Done."
 cat <<EOF
   Repo            : $REPO_DIR @ $(cd "$REPO_DIR" && git rev-parse --short HEAD)
@@ -153,6 +160,7 @@ cat <<EOF
     ~/.claude/{CLAUDE.md, agents, skills, lang}
     ~/.codex/{skills/*, agents, lang}
     ~/.codex/config.toml
+    ~/.config/zellij/config.kdl (defaults + Russian-layout mirror binds)
     ~/.local/bin/{markdown-view, frogmouth-tuned, agent-session-name, plan-view}
 
   ~/.claude/settings.json was NOT installed (Mac uses its own settings).

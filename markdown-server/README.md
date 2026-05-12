@@ -12,13 +12,13 @@ dark GitHub-style theme.
 | `mdurl` | Bash CLI for end users (`mdurl <file.md>` → URL) |
 | `markdown-server.service` | systemd unit (runs `server.py` as the `mdview` user) |
 | `install.sh` | Root installer (creates `mdview`, drops binaries, enables service) |
-| `install-skill.sh` | Per-user installer for the Claude Code skill |
-| `SKILL.md` | Claude Code skill that auto-invokes `mdurl` from any chat |
+| `install-skill.sh` | Per-user fallback installer for Claude/Codex skill symlinks |
+| `SKILL.md` | Symlink to the shared `mdurl` skill |
 
 ## Install
 
 mdurl uses a two-stage install. System-level install is a separate one-shot
-script (`setup-mdurl.sh`); the per-user Claude skill is wired into the
+script (`setup-mdurl.sh`); the shared Claude/Codex skill is wired into the
 regular `update.sh` so every user picks it up on their next update.
 
 ### 1. Server-side (once per host, as root)
@@ -49,18 +49,18 @@ To uninstall:
 sudo bash ~/Coding/0_agents/setup-mdurl.sh uninstall
 ```
 
-### 2. Per-user skill (each user, via the regular update flow)
+### 2. Per-user skills (each user, via the regular update flow)
 
 ```bash
 bash ~/Coding/0_agents/update.sh
 ```
 
-`update.sh` runs as the regular user (no sudo) and symlinks
-`markdown-server/SKILL.md` → `~/.claude/skills/mdurl/SKILL.md`. Re-running
-update.sh after a `git pull` doesn't need to do anything for mdurl: the
-symlink already points at the live file.
+`update.sh` runs as the regular user (no sudo). The canonical skill lives at
+`shared/skills/mdurl`; repo symlinks expose it as `claude/skills/mdurl` and
+`codex/skills/mdurl`, and `install.sh` publishes those into `~/.claude` and
+`~/.codex`.
 
-To run only the skill installer (skipping everything else):
+To run only the fallback skill installer (skipping everything else):
 
 ```bash
 bash ~/Coding/0_agents/markdown-server/install-skill.sh
@@ -71,7 +71,7 @@ bash ~/Coding/0_agents/markdown-server/install-skill.sh
 | Script | Who invokes |
 |--------|-------------|
 | `markdown-server/install.sh` | called by `setup-mdurl.sh` |
-| `markdown-server/install-skill.sh` | called by `update.sh` |
+| `markdown-server/install-skill.sh` | manual fallback for per-user skill symlinks |
 
 You typically don't run these directly.
 

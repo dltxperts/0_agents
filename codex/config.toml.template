@@ -13,6 +13,7 @@ writable_roots = [
   "__HOME__/.local/bin",
   "__HOME__/.codex/memories",
   "/tmp",
+  "/srv/markdown",
   "__XDG_RUNTIME_DIR__",
 __EXTRA_WRITABLE_ROOTS__
 ]

@@ -96,6 +96,15 @@ link_codex_skill() {
   local dst="$CODEX_DST/skills/$skill_name"
   local label="~/.codex/skills/$skill_name"
 
+  # mdurl is a repo-managed shared skill. Older installs created
+  # ~/.codex/skills/mdurl as a real directory with SKILL.md inside; migrate it
+  # to the standard repo symlink instead of leaving a stale copy.
+  if [ "$skill_name" = "mdurl" ] && [ -e "$dst" ] && [ ! -L "$dst" ]; then
+    local backup="${dst}.bak.$(date +%s)"
+    echo "  backing up existing $label → $(basename "$backup")"
+    mv "$dst" "$backup"
+  fi
+
   if [ -L "$dst" ]; then
     local current
     current=$(readlink "$dst")

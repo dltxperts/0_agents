@@ -1,22 +1,38 @@
 #!/usr/bin/env bash
-# Install the mdurl Claude Code skill into the current user's
-# ~/.claude/skills/ directory. Run as the user, NOT as root.
+# Install the mdurl skill into the current user's Claude/Codex skill dirs.
+# This is a manual fallback for users who do not run the repo-level
+# install.sh symlink setup. Run as the user, NOT as root.
 set -euo pipefail
 
 DIR="$(cd "$(dirname "$0")" && pwd)"
-SKILL_SRC="$DIR/SKILL.md"
-TARGET="$HOME/.claude/skills/mdurl"
+REPO_DIR="$(cd "$DIR/.." && pwd)"
+SKILL_SRC="$REPO_DIR/shared/skills/mdurl"
+CLAUDE_TARGET="$HOME/.claude/skills/mdurl"
+CODEX_TARGET="$HOME/.codex/skills/mdurl"
 
-[[ -f "$SKILL_SRC" ]] || { echo "missing: $SKILL_SRC" >&2; exit 1; }
+[[ -f "$SKILL_SRC/SKILL.md" ]] || { echo "missing: $SKILL_SRC/SKILL.md" >&2; exit 1; }
 
-mkdir -p "$TARGET"
-# symlink so future repo updates propagate without re-running this
-ln -sfT "$SKILL_SRC" "$TARGET/SKILL.md"
+install_skill_link() {
+  local target="$1"
+  local parent
+  parent="$(dirname "$target")"
+  if [ -L "$parent" ]; then
+    echo "✓ already repo-managed: $parent → $(readlink "$parent")"
+    return
+  fi
+  mkdir -p "$parent"
+  ln -sfnT "$SKILL_SRC" "$target"
+}
+
+install_skill_link "$CLAUDE_TARGET"
+install_skill_link "$CODEX_TARGET"
 
 cat <<EOF
-✓ mdurl skill installed at $TARGET/SKILL.md (symlink → $SKILL_SRC)
+✓ mdurl skill installed:
+  $CLAUDE_TARGET → $SKILL_SRC
+  $CODEX_TARGET → $SKILL_SRC
 
-Use it from any Claude Code session by saying e.g.:
+Use it from any Claude/Codex session by saying e.g.:
   "open this plan in browser"
   "give me a link to <path>.md"
   "/mdurl <path>"

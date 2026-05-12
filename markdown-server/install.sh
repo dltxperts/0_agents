@@ -100,7 +100,7 @@ cat <<EOF
       mdurl ~/path/to/file.md
       # -> http://u3775:${PORT}/<their-username>/<slug>
 
-  per-user Claude skill:
+  per-user Claude/Codex skill fallback:
       bash $DIR/install-skill.sh
 ================================================================
 EOF

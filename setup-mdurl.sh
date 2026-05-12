@@ -13,8 +13,8 @@
 #   - smoke-tests http://127.0.0.1:6420/
 #
 # After this runs, every user on this host can publish via `mdurl <file>`.
-# To install the per-user Claude Code skill, each user runs the regular
-# `bash ~/Coding/0_agents/update.sh` under their own account.
+# To install the per-user Claude/Codex skill symlinks, each user runs the
+# regular `bash ~/Coding/0_agents/update.sh` under their own account.
 #
 # Usage:
 #   sudo bash setup-mdurl.sh             # install

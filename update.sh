@@ -9,7 +9,7 @@
 #   3. install-bin.sh              (~/.local/bin/markdown-view, ...)
 #   4. install-codex-config.sh            (codex/config.toml render)
 #   5. install-runtimes.sh         (claude-code + codex npm globals — upgrade)
-#   6. mdurl skill                 (per-user ~/.claude/skills/mdurl/ symlink)
+#   6. mdurl shared skill check    (Claude/Codex use repo symlinks from shared/skills)
 #   7. install-linear-mcp.sh       (Linear MCP register; OAuth login skipped)
 #   8. install-lazyvim.sh          (only if --with-lazyvim or detected nvim use)
 #   9. install-completions.sh      (zsh completions for zellij/gh/bun/codex/...)
@@ -120,15 +120,18 @@ else
   bash "$REPO_DIR/install-runtimes.sh"
 fi
 
-# ─── 6. mdurl per-user Claude skill ─────────────────────────────────────
-# Symlinks markdown-server/SKILL.md into ~/.claude/skills/mdurl/SKILL.md
-# for the current user. No sudo, no system changes. The mdurl daemon itself
-# is installed separately by setup-mdurl.sh (one-time, root).
+# ─── 6. mdurl shared skill check ────────────────────────────────────────
+# mdurl is a shared skill at shared/skills/mdurl. claude/skills/mdurl and
+# codex/skills/mdurl are repo symlinks to that shared skill, and install.sh
+# publishes those symlinks into ~/.claude and ~/.codex.
 if should_skip mdurl-skill; then
-  ok "skipping mdurl skill install"
+  ok "skipping mdurl shared skill check"
 else
-  say "mdurl skill (per-user)"
-  bash "$REPO_DIR/markdown-server/install-skill.sh"
+  say "mdurl shared skill"
+  [ -f "$REPO_DIR/shared/skills/mdurl/SKILL.md" ] || fail "missing shared mdurl skill"
+  [ -L "$REPO_DIR/claude/skills/mdurl" ] || fail "claude/skills/mdurl must be a symlink"
+  [ -L "$REPO_DIR/codex/skills/mdurl" ] || fail "codex/skills/mdurl must be a symlink"
+  ok "mdurl skill is shared and linked for Claude/Codex"
 fi
 
 # ─── 7. install-linear-mcp.sh ────────────────────────────────────────────

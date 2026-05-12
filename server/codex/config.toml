@@ -1,5 +1,6 @@
 model = "gpt-5.5"
 model_reasoning_effort = "high"
+
 approval_policy = "never"
 sandbox_mode = "workspace-write"
 web_search = "disabled"
@@ -7,30 +8,40 @@ web_search = "disabled"
 [sandbox_workspace_write]
 network_access = true
 writable_roots = [
-    "/home/vibe/Coding/0_agents",
-    "/home/vibe/Coding/magnis-app/.git",
-    "/home/vibe/Coding/magnis-app/.worktrees",
-    "/home/vibe/.codex/memories",
-    "/tmp",
-    "/run/user/1002/codex-vibe"
-  ]
+  "/home/marketing/Coding",
+  "/home/marketing/.cyrus",
+  "/home/marketing/.local/bin",
+  "/home/marketing/.codex/memories",
+  "/tmp",
+  "/srv/markdown",
+  "/run/user/1003",
+  "/home/marketing/Coding/0_agents/.git",
+  "/home/marketing/Coding/content-os/.git",
+  "/home/marketing/Coding/content-os/.worktrees",
+  "/home/marketing/Coding/.git",
+  "/home/marketing/Coding/magnis-app/.git",
+  "/home/marketing/Coding/magnis-app/.worktrees",
+  "/home/marketing/Coding/magnis-landing/.git",
+  "/home/marketing/Coding/magnis-landing/.worktrees",
+  "/home/marketing/Coding/mikko_build/.git",
+  "/home/marketing/.cyrus/repos/content-os/.git",
+]
 
 [shell_environment_policy]
 inherit = "all"
 ignore_default_excludes = true
 experimental_use_profile = true
 
-[projects."/home/vibe"]
+[projects."/home/marketing"]
 trust_level = "trusted"
 
-[projects."/home/vibe/Coding/0_agents"]
+[projects."/home/marketing/Coding/content-os"]
 trust_level = "trusted"
 
-[projects."/home/vibe/Coding/magnis-app"]
+[projects."/home/marketing/Coding/0_agents"]
 trust_level = "trusted"
-
-[projects."/home/vibe/.cyrus/repos/magnis-app"]
-trust_level = "trusted"
-
 [mcp_servers.linear]
 url = "https://mcp.linear.app/mcp"
+
+[tui.model_availability_nux]
+"gpt-5.5" = 2

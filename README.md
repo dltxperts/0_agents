@@ -73,7 +73,7 @@ bash update.sh --server     # apply server-only wide-permission settings
 
 Pulls latest, re-runs every component installer (idempotent — only changes what's missing or out of date). Upgrades npm globals for `claude-code` + `codex`. On every run also installs/refreshes:
 
-- [x] **`mdurl` Claude skill** — per-user `~/.claude/skills/mdurl/` symlink (use `mdurl <path>` from any session to publish markdown to u3775 server)
+- [x] **`mdurl` shared skill** — `shared/skills/mdurl` linked into Claude and Codex skills (use `mdurl <path>` from any session to publish markdown to u3775 server)
 - [x] **Refreshed zsh completions** — picks up new versions of `zellij`/`gh`/`codex`/etc. since last run
 
 Skip individual steps with `--skip <name>` (repeatable). Names: `git, install, bin, codex-config, runtimes, mdurl-skill, linear-mcp, lazyvim, completions`.

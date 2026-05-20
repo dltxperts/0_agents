@@ -5,16 +5,16 @@
 # what's missing. Safe to use as the standard "bring this Mac up to
 # current 0_agents baseline" command.
 #
-# What this installs (in order):
+# What this installs (in order, all helpers live in lib/):
 #   0. Sanity checks (running as user, Homebrew + git present)
-#   1. install.sh (claude+codex symlinks; NOT --server on a client)
-#   2. install-bin.sh       (~/.local/bin/markdown-view, frogmouth-tuned, ...)
-#   3. install-codex-config.sh     (Codex config.toml render)
-#   4. install-runtimes.sh  (claude-code + codex npm CLIs)
-#   5. install-linear-mcp.sh (Linear MCP register)
-#   6. install-lazyvim.sh   (LazyVim — operator wants to learn nvim on Mac too)
-#   7. macos_hotkey.sh      (Hammerspoon + Cmd-Shift-3 screenshot upload)
-#   8. install-completions.sh (zsh completions for zellij/gh/bun/codex/...)
+#   1. lib/install.sh              (claude+codex symlinks; NOT --server on a client)
+#   2. lib/install-bin.sh          (~/.local/bin/markdown-view, frogmouth-tuned, ...)
+#   3. lib/install-codex-config.sh (Codex config.toml render)
+#   4. lib/install-runtimes.sh     (claude native binary + codex npm CLI)
+#   5. lib/install-linear-mcp.sh   (Linear MCP register)
+#   6. lib/install-lazyvim.sh      (LazyVim — operator wants to learn nvim on Mac too)
+#   7. lib/macos_hotkey.sh         (Hammerspoon + Cmd-Shift-3 screenshot upload)
+#   8. lib/install-completions.sh  (zsh completions for zellij/gh/bun/codex/...)
 #   9. Subscription logins (interactive: claude /login, codex login)
 #  10. Manual hints (Tailscale, etc.)
 #
@@ -24,11 +24,11 @@
 #   - GitHub SSH key (manual: ssh-keygen + paste pubkey to GitHub)
 #
 # Usage:
-#   setup-mac.sh                 # full bootstrap
-#   setup-mac.sh --no-runtimes   # skip claude/codex npm install
-#   setup-mac.sh --no-lazyvim    # skip LazyVim install
-#   setup-mac.sh --no-hotkey     # skip Hammerspoon screenshot hotkey
-#   setup-mac.sh --no-logins     # skip interactive subscription logins
+#   install-client-mac.sh                 # full bootstrap
+#   install-client-mac.sh --no-runtimes   # skip claude/codex install
+#   install-client-mac.sh --no-lazyvim    # skip LazyVim install
+#   install-client-mac.sh --no-hotkey     # skip Hammerspoon screenshot hotkey
+#   install-client-mac.sh --no-logins     # skip interactive subscription logins
 
 set -euo pipefail
 
@@ -60,7 +60,7 @@ err()   { printf "\n\033[1;31m✗ %s\033[0m\n" "$*" >&2; exit 1; }
 # ─── 0. Sanity ──────────────────────────────────────────────────────────────
 say "Sanity checks"
 [[ "$(id -u)" -ne 0 ]] || err "Do NOT run as root."
-[[ "$(uname -s)" == "Darwin" ]] || err "This script is macOS-only. On Linux use setup-server.sh."
+[[ "$(uname -s)" == "Darwin" ]] || err "This script is macOS-only. On Linux use install-server-linux.sh."
 
 for c in bash curl git ssh; do
   command -v "$c" >/dev/null || err "$c is missing. Install via your package manager and rerun."
@@ -73,15 +73,15 @@ ok "running as $(whoami) on macOS, brew $(brew --version | head -1 | awk '{print
 
 # ─── 1. install.sh (config symlinks) ────────────────────────────────────────
 say "Installing agent config (claude + codex symlinks)"
-bash "$REPO_DIR/install.sh"
+bash "$REPO_DIR/lib/install.sh"
 
 # ─── 2. install-bin.sh ──────────────────────────────────────────────────────
 say "Installing ~/.local/bin helpers"
-bash "$REPO_DIR/install-bin.sh"
+bash "$REPO_DIR/lib/install-bin.sh"
 
 # ─── 3. install-codex-config.sh ────────────────────────────────────────────────────
 say "Rendering Codex config.toml"
-bash "$REPO_DIR/install-codex-config.sh"
+bash "$REPO_DIR/lib/install-codex-config.sh"
 
 # ─── 4. install-runtimes.sh (claude-code + codex npm CLIs) ──────────────────
 if [[ "$DO_RUNTIMES" -eq 1 ]]; then
@@ -90,28 +90,28 @@ if [[ "$DO_RUNTIMES" -eq 1 ]]; then
     brew install node
   fi
   say "Installing agent runtimes"
-  bash "$REPO_DIR/install-runtimes.sh"
+  bash "$REPO_DIR/lib/install-runtimes.sh"
 else
   warn "skipping runtimes install (--no-runtimes)"
 fi
 
 # ─── 5. install-linear-mcp.sh ───────────────────────────────────────────────
 say "Registering Linear MCP"
-bash "$REPO_DIR/install-linear-mcp.sh" || warn "install-linear-mcp.sh exited non-zero (continuing)"
+bash "$REPO_DIR/lib/install-linear-mcp.sh" || warn "install-linear-mcp.sh exited non-zero (continuing)"
 
 # ─── 6. install-lazyvim.sh ──────────────────────────────────────────────────
 if [[ "$DO_LAZYVIM" -eq 1 ]]; then
   say "Installing LazyVim"
-  bash "$REPO_DIR/install-lazyvim.sh"
+  bash "$REPO_DIR/lib/install-lazyvim.sh"
 else
   warn "skipping LazyVim install (--no-lazyvim)"
 fi
 
 # ─── 7. macos_hotkey.sh (Hammerspoon screenshot hotkey) ─────────────────────
 if [[ "$DO_HOTKEY" -eq 1 ]]; then
-  if [[ -x "$REPO_DIR/macos_hotkey.sh" ]]; then
+  if [[ -x "$REPO_DIR/lib/macos_hotkey.sh" ]]; then
     say "Installing Hammerspoon + Cmd-Shift-3 screenshot hotkey"
-    bash "$REPO_DIR/macos_hotkey.sh" \
+    bash "$REPO_DIR/lib/macos_hotkey.sh" \
       || warn "macos_hotkey.sh exited non-zero (you may need to grant Hammerspoon Accessibility access in System Settings)"
   fi
 else
@@ -119,9 +119,9 @@ else
 fi
 
 # ─── 8. install-completions.sh (zsh completions) ────────────────────────────
-if [[ -x "$REPO_DIR/install-completions.sh" ]]; then
+if [[ -x "$REPO_DIR/lib/install-completions.sh" ]]; then
   say "Installing zsh completions"
-  bash "$REPO_DIR/install-completions.sh"
+  bash "$REPO_DIR/lib/install-completions.sh"
 fi
 
 # ─── 9. Subscription logins ─────────────────────────────────────────────────

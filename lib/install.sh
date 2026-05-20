@@ -45,7 +45,7 @@ if [[ "$SERVER_MODE" -eq 0 && "$(uname -s)" == "Linux" ]]; then
   fi
 fi
 
-REPO_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+REPO_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 CLAUDE_SRC="$REPO_DIR/claude"
 CODEX_SRC="$REPO_DIR/codex"
 SHARED_SRC="$REPO_DIR/shared"
@@ -164,12 +164,12 @@ if [[ "$SERVER_MODE" -eq 1 ]]; then
   link_item "~/.codex/config.toml" "$SERVER_SRC/codex/config.toml" "$CODEX_DST/config.toml"
 fi
 
-if [ -x "$REPO_DIR/install-bin.sh" ]; then
-  bash "$REPO_DIR/install-bin.sh"
+if [ -x "$REPO_DIR/lib/install-bin.sh" ]; then
+  bash "$REPO_DIR/lib/install-bin.sh"
 fi
 
-if [ -x "$REPO_DIR/install-completions.sh" ]; then
-  bash "$REPO_DIR/install-completions.sh"
+if [ -x "$REPO_DIR/lib/install-completions.sh" ]; then
+  bash "$REPO_DIR/lib/install-completions.sh"
 fi
 
 # MCP: register codex (user scope) so any Claude Code session can call it

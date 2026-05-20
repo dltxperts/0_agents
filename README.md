@@ -6,16 +6,19 @@ Configs and tooling for our coding agents — **Claude Code** and **Codex** — 
 
 | Scenario | Command |
 |---|---|
-| Fresh Mac client | `bash ~/Coding/0_agents/setup-mac.sh` |
-| Bare Linux server | `bash ~/Coding/0_agents/setup-server.sh` |
-| Linux server hosting Cyrus | `bash setup-server.sh && bash setup-cyrus.sh` |
+| Fresh Mac client | `bash ~/Coding/0_agents/install-client-mac.sh` |
+| Bare Linux server | `bash ~/Coding/0_agents/install-server-linux.sh` |
+| Linux server hosting Cyrus | `bash install-server-linux.sh && bash lib/setup-cyrus.sh` |
 | Sync existing host | `bash ~/Coding/0_agents/update.sh` |
+
+Three top-level entry points; every other installer is a helper inside `lib/`.
 
 ---
 
-## Features on Mac (`setup-mac.sh`)
+## Features on Mac (`install-client-mac.sh`)
 
-- [x] **`claude` and `codex` CLIs** installed globally via npm; `update.sh` upgrades them
+- [x] **`claude` CLI** installed via Anthropic's native installer (`curl -fsSL https://claude.ai/install.sh | bash`) — no Node.js dependency; `update.sh` runs `claude update`
+- [x] **`codex` CLI** installed globally via npm (`@openai/codex`); `update.sh` upgrades it
 - [x] **Shared agent skills** in both Claude and Codex — `bug`, `cleanup-worktrees`, `completion-note`, `dictate`, `fast-precommit`, `git`, `markdown-view`, `quick-fix`, `start-work`, `startup-pressure-test`, `test-protocol`, `verify-app`
 - [x] **Claude-only skills** — `dispatch-to-linear`, `execute-from-linear`, `mdurl`, `plan`, `review-implementation`, `review-plan`, `spec`, `verify-frontend`
 - [x] **Claude background agents** (subagents) — `coherence-cop`, `coverage-cop`, `simplicity-cop`
@@ -32,14 +35,14 @@ Configs and tooling for our coding agents — **Claude Code** and **Codex** — 
 
 Skips: `--no-runtimes`, `--no-lazyvim`, `--no-hotkey`, `--no-logins`.
 
-Not installed by `setup-mac.sh` — install yourself:
+Not installed by `install-client-mac.sh` — install yourself:
 - Homebrew (https://brew.sh)
 - Tailscale — `brew install --cask tailscale` then log in
 - GitHub SSH key — `ssh-keygen -t ed25519` + paste pubkey to GitHub
 
 ---
 
-## Features on Linux server (`setup-server.sh`)
+## Features on Linux server (`install-server-linux.sh`)
 
 **Everything from Mac above** (where applicable; no Hammerspoon hotkey) **plus:**
 
@@ -57,10 +60,10 @@ Run **as the target user, not root**.
 
 Skips: `--no-runtimes`, `--no-lazyvim`, `--no-logins`.
 
-Not installed by `setup-server.sh` — separate one-shots:
-- **mdurl** markdown publishing server: `sudo bash setup-mdurl.sh`
-- **Cyrus** orchestrator: `bash setup-cyrus.sh`
-- **Create new agent user** (root): `sudo bash create-agent-user.sh <username>`
+Not installed by `install-server-linux.sh` — separate one-shots (all in `lib/`):
+- **mdurl** markdown publishing server: `sudo bash lib/setup-mdurl.sh`
+- **Cyrus** orchestrator: `bash lib/setup-cyrus.sh`
+- **Create new agent user** (root): `sudo bash lib/create-agent-user.sh <username>`
 
 ---
 
@@ -71,7 +74,7 @@ bash update.sh              # client mode
 bash update.sh --server     # apply server-only wide-permission settings
 ```
 
-Pulls latest, re-runs every component installer (idempotent — only changes what's missing or out of date). Upgrades npm globals for `claude-code` + `codex`. On every run also installs/refreshes:
+Pulls latest, re-runs every component installer (idempotent — only changes what's missing or out of date). Runs `claude update` (native binary self-update) and `npm install -g @openai/codex`. On every run also installs/refreshes:
 
 - [x] **`mdurl` shared skill** — `shared/skills/mdurl` linked into Claude and Codex skills (use `mdurl <path>` from any session to publish markdown to u3775 server)
 - [x] **Refreshed zsh completions** — picks up new versions of `zellij`/`gh`/`codex`/etc. since last run

@@ -18,16 +18,16 @@ dark GitHub-style theme.
 ## Install
 
 mdurl uses a two-stage install. System-level install is a separate one-shot
-script (`setup-mdurl.sh`); the shared Claude/Codex skill is wired into the
+script (`lib/setup-mdurl.sh`); the shared Claude/Codex skill is wired into the
 regular `update.sh` so every user picks it up on their next update.
 
 ### 1. Server-side (once per host, as root)
 
 ```bash
-sudo bash ~/Coding/0_agents/setup-mdurl.sh
+sudo bash ~/Coding/0_agents/lib/setup-mdurl.sh
 ```
 
-`setup-mdurl.sh` is **independent** of `setup-server.sh` -- the regular
+`lib/setup-mdurl.sh` is **independent** of `install-server-linux.sh` -- the regular
 server bootstrap does not install mdurl. This is intentional: mdurl is opt-in
 because it opens a network port and creates a system user.
 
@@ -46,7 +46,7 @@ What it does (delegating to `markdown-server/install.sh`):
 To uninstall:
 
 ```bash
-sudo bash ~/Coding/0_agents/setup-mdurl.sh uninstall
+sudo bash ~/Coding/0_agents/lib/setup-mdurl.sh uninstall
 ```
 
 ### 2. Per-user skills (each user, via the regular update flow)

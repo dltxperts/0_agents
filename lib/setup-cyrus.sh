@@ -3,10 +3,10 @@
 # bootstrapped (Node, Bun, cloudflared, claude-code, codex installed).
 #
 # If the prerequisites aren't there, this script STOPS and tells you to
-# run setup-server.sh first. Do not duplicate server bootstrap here.
+# run install-server-linux.sh first. Do not duplicate server bootstrap here.
 #
 # What this does (Cyrus-only):
-#   1. Pre-flight: verify setup-server.sh has run
+#   1. Pre-flight: verify install-server-linux.sh has run
 #   2. Install cyrus-ai npm CLI
 #   3. cloudflared login (interactive — needed once per zone)
 #   4. Cyrus home (~/.cyrus)
@@ -42,7 +42,7 @@ for arg in "$@"; do
   esac
 done
 
-REPO_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+REPO_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 CYRUS_HOME="${CYRUS_HOME:-$HOME/.cyrus}"
 DOMAIN="${DOMAIN:-}"
 TUNNEL_NAME="${TUNNEL_NAME:-$(whoami)-bot}"
@@ -58,7 +58,7 @@ err()    { printf "\n\033[1;31m✗ %s\033[0m\n" "$*" >&2; exit 1; }
 pause()  { read -rp "  Press Enter when done... " _; }
 
 # ─── 1. Pre-flight: server bootstrapped? ────────────────────────────────────
-say "Pre-flight: checking that setup-server.sh has run"
+say "Pre-flight: checking that install-server-linux.sh has run"
 [[ "$(id -u)" -ne 0 ]] || err "Do NOT run as root."
 
 missing=()
@@ -66,12 +66,12 @@ for c in node npm bun cloudflared claude codex; do
   command -v "$c" >/dev/null || missing+=("$c")
 done
 if [[ "${#missing[@]}" -gt 0 ]]; then
-  err "Missing prerequisites: ${missing[*]}. Run 'bash $REPO_DIR/setup-server.sh' first, then come back."
+  err "Missing prerequisites: ${missing[*]}. Run 'bash $REPO_DIR/install-server-linux.sh' first, then come back."
 fi
 ok "node $(node --version), bun $(bun --version), cloudflared OK, claude OK, codex OK"
 
 [[ -L "$HOME/.claude/CLAUDE.md" ]] \
-  || warn "~/.claude/CLAUDE.md not symlinked — agent config may be stale. Run setup-server.sh."
+  || warn "~/.claude/CLAUDE.md not symlinked — agent config may be stale. Run install-server-linux.sh."
 
 # ─── 2. Cyrus npm CLI ───────────────────────────────────────────────────────
 say "Cyrus CLI"

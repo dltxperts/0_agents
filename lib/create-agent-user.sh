@@ -4,9 +4,9 @@
 # This script must be run as ROOT or with sudo.
 #
 # Usage:
-#   sudo bash create-agent-user.sh <username>
-#   sudo bash create-agent-user.sh health
-#   sudo bash create-agent-user.sh gearbox
+#   sudo bash lib/create-agent-user.sh <username>
+#   sudo bash lib/create-agent-user.sh health
+#   sudo bash lib/create-agent-user.sh gearbox
 #
 # What it does:
 #   1. Creates the user account (interactive password prompt)
@@ -18,7 +18,7 @@
 #   ssh-keygen -t ed25519 -C "<username>@$(hostname)"
 #   # Add the pubkey to https://github.com/settings/keys
 #   git clone git@github.com:dltxperts/0_agents.git ~/Coding/0_agents
-#   bash ~/Coding/0_agents/setup-server.sh
+#   bash ~/Coding/0_agents/install-server-linux.sh
 
 set -euo pipefail
 
@@ -92,10 +92,10 @@ Next steps — complete these AS THE NEW USER:
    $ git clone git@github.com:dltxperts/0_agents.git ~/Coding/0_agents
 
 4. Run the server setup:
-   $ bash ~/Coding/0_agents/setup-server.sh
+   $ bash ~/Coding/0_agents/install-server-linux.sh
 
 5. (Optional) If this user will run Cyrus:
-   $ bash ~/Coding/0_agents/setup-cyrus.sh
+   $ bash ~/Coding/0_agents/lib/setup-cyrus.sh
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

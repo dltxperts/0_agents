@@ -5,30 +5,30 @@
 # missing. Safe to use as the standard "bring this server up to current
 # baseline" command after every git pull.
 #
-# What this installs (in order):
+# What this installs (in order, all helpers live in lib/):
 #   0. Sanity checks (running as user, basic tools present)
 #   1. GitHub CLI (gh) + gh auth login + gh auth setup-git
 #   2. Node (via nvm)
 #   3. Bun
 #   4. cloudflared (system tool — Cyrus, dev tunnels, anything else)
-#   5. install.sh --server  (claude+codex symlinks + wide-permission settings)
-#   6. install-bin.sh       (~/.local/bin/markdown-view, frogmouth-tuned, ...)
-#   7. install-codex-config.sh     (Codex config.toml render)
-#   8. install-runtimes.sh  (claude-code + codex npm CLIs)
-#   9. install-linear-mcp.sh (Linear MCP register; OAuth login deferred)
-#  10. install-lazyvim.sh   (LazyVim — useful on Ubuntu where apt nvim is old)
+#   5. lib/install.sh --server     (claude+codex symlinks + wide-permission settings)
+#   6. lib/install-bin.sh          (~/.local/bin/markdown-view, frogmouth-tuned, ...)
+#   7. lib/install-codex-config.sh (Codex config.toml render)
+#   8. lib/install-runtimes.sh     (claude native binary + codex npm CLI)
+#   9. lib/install-linear-mcp.sh   (Linear MCP register; OAuth login deferred)
+#  10. lib/install-lazyvim.sh      (LazyVim — useful on Ubuntu where apt nvim is old)
 #  11. zsh + oh-my-zsh + ~/.zshrc PATH (chsh to zsh)
-#  12. install-completions.sh (zsh completions for zellij/gh/bun/codex/...)
+#  12. lib/install-completions.sh  (zsh completions for zellij/gh/bun/codex/...)
 #  13. Subscription logins (interactive: claude /login, codex login --device-auth)
 #  14. Zellij session label
 #
 # Does NOT install:
-#   - mdurl markdown server (separate one-shot: sudo bash setup-mdurl.sh)
-#   - Cyrus (separate: bash setup-cyrus.sh)
+#   - mdurl markdown server (separate one-shot: sudo bash lib/setup-mdurl.sh)
+#   - Cyrus (separate: bash lib/setup-cyrus.sh)
 #
 # Does NOT do:
-#   - Cyrus bootstrap (use setup-cyrus.sh AFTER this)
-#   - Mac-specific things (use setup-mac.sh)
+#   - Cyrus bootstrap (use lib/setup-cyrus.sh AFTER this)
+#   - Mac-specific things (use install-client-mac.sh)
 #   - User creation (do that as root: 'sudo adduser X; sudo loginctl enable-linger X')
 #   - SSH keys (do that yourself: 'ssh-keygen -t ed25519')
 #   - Repo clone (you've already cloned to run this script)
@@ -40,10 +40,10 @@
 #   NVM_VERSION     default: v0.40.1
 #
 # Usage:
-#   setup-server.sh                 # full bootstrap
-#   setup-server.sh --no-runtimes   # skip claude/codex npm install (faster reruns)
-#   setup-server.sh --no-lazyvim    # skip LazyVim install
-#   setup-server.sh --no-logins     # skip interactive subscription logins
+#   install-server-linux.sh                 # full bootstrap
+#   install-server-linux.sh --no-runtimes   # skip claude/codex install (faster reruns)
+#   install-server-linux.sh --no-lazyvim    # skip LazyVim install
+#   install-server-linux.sh --no-logins     # skip interactive subscription logins
 
 set -euo pipefail
 
@@ -80,7 +80,7 @@ for c in bash curl git ssh sudo; do
 done
 ok "running as $(whoami) on $(uname -s) $(uname -m)"
 
-[[ "$(uname -s)" == "Linux" ]] || warn "This script is targeted at Linux. macOS has its own setup-mac.sh."
+[[ "$(uname -s)" == "Linux" ]] || warn "This script is targeted at Linux. macOS has its own install-client-mac.sh."
 
 # ─── 1. GitHub CLI (gh) + git credential helper ─────────────────────────────
 # Install gh, log in (first run is interactive — paste token or use device
@@ -168,45 +168,45 @@ export PATH="$HOME/.local/bin:$PATH"
 ok "cloudflared $(cloudflared --version 2>&1 | head -1)"
 
 # ─── 5. Repo-managed agent config (server mode) ─────────────────────────────
-if [[ -x "$REPO_DIR/install.sh" ]]; then
+if [[ -x "$REPO_DIR/lib/install.sh" ]]; then
   say "Installing agent config from $REPO_DIR (server mode)"
-  bash "$REPO_DIR/install.sh" --server
+  bash "$REPO_DIR/lib/install.sh" --server
 else
   err "install.sh not found alongside this script — abort"
 fi
 
 # ─── 6. ~/.local/bin helpers (markdown-view, frogmouth-tuned, ...) ──────────
-if [[ -x "$REPO_DIR/install-bin.sh" ]]; then
+if [[ -x "$REPO_DIR/lib/install-bin.sh" ]]; then
   say "Installing ~/.local/bin helpers"
-  bash "$REPO_DIR/install-bin.sh"
+  bash "$REPO_DIR/lib/install-bin.sh"
 fi
 
 # ─── 7. Codex config.toml render ────────────────────────────────────────────
-if [[ -x "$REPO_DIR/install-codex-config.sh" ]]; then
+if [[ -x "$REPO_DIR/lib/install-codex-config.sh" ]]; then
   say "Rendering Codex config.toml"
-  bash "$REPO_DIR/install-codex-config.sh"
+  bash "$REPO_DIR/lib/install-codex-config.sh"
 fi
 
 # ─── 8. Runtimes (claude-code + codex npm CLIs) ─────────────────────────────
-if [[ "$DO_RUNTIMES" -eq 1 && -x "$REPO_DIR/install-runtimes.sh" ]]; then
+if [[ "$DO_RUNTIMES" -eq 1 && -x "$REPO_DIR/lib/install-runtimes.sh" ]]; then
   say "Installing agent runtimes"
-  bash "$REPO_DIR/install-runtimes.sh"
+  bash "$REPO_DIR/lib/install-runtimes.sh"
 else
   warn "skipping runtimes install (--no-runtimes or install-runtimes.sh missing)"
 fi
 
 # ─── 9. Linear MCP register ─────────────────────────────────────────────────
-if [[ -x "$REPO_DIR/install-linear-mcp.sh" ]]; then
+if [[ -x "$REPO_DIR/lib/install-linear-mcp.sh" ]]; then
   say "Registering Linear MCP"
   # OAuth login is interactive and requires a browser — print instructions
   # but don't block the bootstrap; user can finish login on their laptop.
-  bash "$REPO_DIR/install-linear-mcp.sh" || warn "install-linear-mcp.sh exited non-zero (continuing)"
+  bash "$REPO_DIR/lib/install-linear-mcp.sh" || warn "install-linear-mcp.sh exited non-zero (continuing)"
 fi
 
 # ─── 10. LazyVim ────────────────────────────────────────────────────────────
-if [[ "$DO_LAZYVIM" -eq 1 && -x "$REPO_DIR/install-lazyvim.sh" ]]; then
+if [[ "$DO_LAZYVIM" -eq 1 && -x "$REPO_DIR/lib/install-lazyvim.sh" ]]; then
   say "Installing LazyVim"
-  bash "$REPO_DIR/install-lazyvim.sh"
+  bash "$REPO_DIR/lib/install-lazyvim.sh"
 else
   warn "skipping LazyVim install (--no-lazyvim or install-lazyvim.sh missing)"
 fi
@@ -289,9 +289,9 @@ else
 fi
 
 # ─── 12. Zsh completions ────────────────────────────────────────────────────
-if [[ -x "$REPO_DIR/install-completions.sh" ]]; then
+if [[ -x "$REPO_DIR/lib/install-completions.sh" ]]; then
   say "Installing zsh completions"
-  bash "$REPO_DIR/install-completions.sh"
+  bash "$REPO_DIR/lib/install-completions.sh"
 fi
 
 # ─── 13. Subscription logins (interactive) ─────────────────────────────────
@@ -357,7 +357,7 @@ cat <<EOF
   Next steps:
     - Re-login (or run 'exec zsh') so the new login shell takes effect.
       The current session is still bash — chsh only applies on next login.
-    - If this host is meant to run Cyrus: bash $REPO_DIR/setup-cyrus.sh
+    - If this host is meant to run Cyrus: bash $REPO_DIR/lib/setup-cyrus.sh
     - To re-apply latest 0_agents changes anytime: bash $REPO_DIR/update.sh
     - To edit code from terminal: nvim (LazyVim is configured)
 EOF

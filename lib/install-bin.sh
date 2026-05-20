@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-REPO_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+REPO_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 BIN_SRC="$REPO_DIR/bin"
 BIN_DST="$HOME/.local/bin"
 

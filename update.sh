@@ -3,16 +3,16 @@
 # Idempotent: re-runs every component installer; each one detects what's
 # already in place and only changes what's missing or out of date.
 #
-# Sequence:
+# Sequence (all installers live in lib/):
 #   1. git pull --ff-only          (fast-forward; aborts on diverged history)
-#   2. install.sh                  (claude+codex symlinks, +server flag passthrough)
-#   3. install-bin.sh              (~/.local/bin/markdown-view, ...)
-#   4. install-codex-config.sh            (codex/config.toml render)
-#   5. install-runtimes.sh         (claude-code + codex npm globals — upgrade)
+#   2. lib/install.sh              (claude+codex symlinks, +server flag passthrough)
+#   3. lib/install-bin.sh          (~/.local/bin/markdown-view, ...)
+#   4. lib/install-codex-config.sh (codex/config.toml render)
+#   5. lib/install-runtimes.sh     (claude native binary + codex npm — upgrade)
 #   6. mdurl shared skill check    (Claude/Codex use repo symlinks from shared/skills)
-#   7. install-linear-mcp.sh       (Linear MCP register; OAuth login skipped)
-#   8. install-lazyvim.sh          (only if --with-lazyvim or detected nvim use)
-#   9. install-completions.sh      (zsh completions for zellij/gh/bun/codex/...)
+#   7. lib/install-linear-mcp.sh   (Linear MCP register; OAuth login skipped)
+#   8. lib/install-lazyvim.sh      (only if --with-lazyvim or detected nvim use)
+#   9. lib/install-completions.sh  (zsh completions for zellij/gh/bun/codex/...)
 #
 # Per-step failures DO stop the run (set -e). Intentional skips via flags.
 #
@@ -89,10 +89,10 @@ if should_skip install; then
 else
   say "install.sh$([ $SERVER_MODE -eq 1 ] && echo ' --server')"
   if [ "$SERVER_MODE" -eq 1 ]; then
-    bash "$REPO_DIR/install.sh" --server
+    bash "$REPO_DIR/lib/install.sh" --server
   else
     # Pass empty stdin so install.sh's interactive Linux-server prompt is bypassed.
-    bash "$REPO_DIR/install.sh" </dev/null
+    bash "$REPO_DIR/lib/install.sh" </dev/null
   fi
 fi
 
@@ -101,7 +101,7 @@ if should_skip bin; then
   ok "skipping install-bin.sh"
 else
   say "install-bin.sh"
-  bash "$REPO_DIR/install-bin.sh"
+  bash "$REPO_DIR/lib/install-bin.sh"
 fi
 
 # ─── 4. install-codex-config.sh ─────────────────────────────────────────────────
@@ -109,7 +109,7 @@ if should_skip codex-config; then
   ok "skipping install-codex-config.sh"
 else
   say "install-codex-config.sh"
-  bash "$REPO_DIR/install-codex-config.sh"
+  bash "$REPO_DIR/lib/install-codex-config.sh"
 fi
 
 # ─── 5. install-runtimes.sh ──────────────────────────────────────────────
@@ -117,7 +117,7 @@ if should_skip runtimes || [ "$DO_RUNTIMES" -eq 0 ]; then
   ok "skipping install-runtimes.sh"
 else
   say "install-runtimes.sh"
-  bash "$REPO_DIR/install-runtimes.sh"
+  bash "$REPO_DIR/lib/install-runtimes.sh"
 fi
 
 # ─── 6. mdurl shared skill check ────────────────────────────────────────
@@ -141,7 +141,7 @@ else
   say "install-linear-mcp.sh"
   # The script handles already-registered case as ✓; OAuth login is interactive
   # and a no-op when token is fresh, so safe to re-run.
-  bash "$REPO_DIR/install-linear-mcp.sh" || warn "install-linear-mcp.sh exited non-zero (continuing)"
+  bash "$REPO_DIR/lib/install-linear-mcp.sh" || warn "install-linear-mcp.sh exited non-zero (continuing)"
 fi
 
 # ─── 8. install-lazyvim.sh (opt-in) ──────────────────────────────────────
@@ -149,11 +149,11 @@ if should_skip lazyvim; then
   ok "skipping install-lazyvim.sh"
 elif [ "$DO_LAZYVIM" -eq 1 ]; then
   say "install-lazyvim.sh"
-  bash "$REPO_DIR/install-lazyvim.sh"
+  bash "$REPO_DIR/lib/install-lazyvim.sh"
 elif [ -f "$HOME/.config/nvim/lua/config/lazy.lua" ]; then
   # Already-installed LazyVim — keep it current (idempotent run).
   say "install-lazyvim.sh (auto-detected existing LazyVim)"
-  bash "$REPO_DIR/install-lazyvim.sh"
+  bash "$REPO_DIR/lib/install-lazyvim.sh"
 else
   ok "skipping install-lazyvim.sh (no LazyVim detected; pass --with-lazyvim to install)"
 fi
@@ -163,7 +163,7 @@ if should_skip completions; then
   ok "skipping install-completions.sh"
 else
   say "install-completions.sh"
-  bash "$REPO_DIR/install-completions.sh"
+  bash "$REPO_DIR/lib/install-completions.sh"
 fi
 
 cat <<EOF

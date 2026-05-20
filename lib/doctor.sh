@@ -33,7 +33,7 @@ for arg in "$@"; do
   esac
 done
 
-REPO_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+REPO_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 FAILS=0
 PASSES=0
 

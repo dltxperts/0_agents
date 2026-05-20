@@ -76,7 +76,7 @@ fi
 # COMP_DIR via a separate substitution.
 read -r -d '' BLOCK <<EOF || true
 $MARK_BEGIN
-# Managed by 0_agents/install-completions.sh — re-run that script to refresh.
+# Managed by 0_agents/lib/install-completions.sh — re-run that script to refresh.
 fpath=("$COMP_DIR" \$fpath)
 $MARK_END
 EOF
@@ -130,7 +130,7 @@ else
   # No oh-my-zsh source line — append at end with our own compinit.
   {
     printf '\n%s\n' "$MARK_BEGIN"
-    printf '# Managed by 0_agents/install-completions.sh — re-run that script to refresh.\n'
+    printf '# Managed by 0_agents/lib/install-completions.sh — re-run that script to refresh.\n'
     printf 'fpath=("%s" $fpath)\n' "$COMP_DIR"
     printf 'autoload -Uz compinit && compinit -u\n'
     printf '%s\n' "$MARK_END"

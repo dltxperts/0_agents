@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# setup-mdurl.sh -- one-time install of the mdurl markdown server.
+# lib/setup-mdurl.sh -- one-time install of the mdurl markdown server.
 #
-# Run this ONCE per host, as root. It is independent of setup-server.sh:
+# Run this ONCE per host, as root. It is independent of install-server-linux.sh:
 # the regular server bootstrap does NOT touch mdurl, so this is opt-in.
 #
 # What it does (delegates to markdown-server/install.sh):
@@ -17,20 +17,20 @@
 # regular `bash ~/Coding/0_agents/update.sh` under their own account.
 #
 # Usage:
-#   sudo bash setup-mdurl.sh             # install
-#   sudo bash setup-mdurl.sh uninstall   # tear down (keeps /srv/markdown content)
+#   sudo bash lib/setup-mdurl.sh             # install
+#   sudo bash lib/setup-mdurl.sh uninstall   # tear down (keeps /srv/markdown content)
 
 set -euo pipefail
 
 if [[ "$(id -u)" -ne 0 ]]; then
   cat >&2 <<EOF
-setup-mdurl.sh must run as root. Try:
+lib/setup-mdurl.sh must run as root. Try:
   sudo bash $0 $*
 EOF
   exit 1
 fi
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 SUBDIR="$DIR/markdown-server"
 
 [[ -x "$SUBDIR/install.sh" ]] || {
